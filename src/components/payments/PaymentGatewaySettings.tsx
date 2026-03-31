@@ -46,7 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // ==================== الأنواع ====================
 
-type PaymentGatewayCode = 'paypal' | 'stripe' | 'mada' | 'apple_pay' | 'stc_pay' | 'tamara';
+type PaymentGatewayCode = 'mada' | 'apple_pay';
 
 interface GatewayInfo {
   code: PaymentGatewayCode;
@@ -368,8 +368,7 @@ function GatewayConfigForm({ gateway, onSave, saving }: GatewayConfigFormProps) 
     });
   };
 
-  const needsApiKey = ['paypal', 'stripe'].includes(gateway.code);
-  const needsMerchantId = ['mada', 'apple_pay', 'stc_pay'].includes(gateway.code);
+  const needsMerchantId = ['mada', 'apple_pay'].includes(gateway.code);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

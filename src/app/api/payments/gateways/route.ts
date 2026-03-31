@@ -18,26 +18,6 @@ const gatewayInfo: Record<PaymentGatewayCode, {
   supportedCurrencies: string[];
   requiresWebhook: boolean;
 }> = {
-  paypal: {
-    name: 'PayPal',
-    nameAr: 'باي بال',
-    icon: '/icons/paypal.svg',
-    description: 'Accept payments globally with PayPal',
-    descriptionAr: 'قبول المدفوعات عالمياً عبر باي بال',
-    features: ['International payments', 'Buyer protection', 'Express checkout'],
-    supportedCurrencies: ['USD', 'EUR', 'GBP', 'SAR', 'AED'],
-    requiresWebhook: true,
-  },
-  stripe: {
-    name: 'Stripe',
-    nameAr: 'سترايب',
-    icon: '/icons/stripe.svg',
-    description: 'Modern payment processing for internet businesses',
-    descriptionAr: 'معالجة مدفوعات حديثة للأعمال الإلكترونية',
-    features: ['Cards', 'Apple Pay', 'Google Pay', 'Payment links'],
-    supportedCurrencies: ['USD', 'EUR', 'GBP', 'SAR', 'AED'],
-    requiresWebhook: true,
-  },
   mada: {
     name: 'Mada',
     nameAr: 'مدى',
@@ -57,26 +37,6 @@ const gatewayInfo: Record<PaymentGatewayCode, {
     features: ['Touch ID', 'Face ID', 'One-tap payment'],
     supportedCurrencies: ['SAR', 'USD', 'EUR', 'GBP', 'AED'],
     requiresWebhook: false,
-  },
-  stc_pay: {
-    name: 'STC Pay',
-    nameAr: 'STC Pay',
-    icon: '/icons/stc-pay.svg',
-    description: 'Digital wallet for Saudi Arabia',
-    descriptionAr: 'محفظة رقمية للمملكة العربية السعودية',
-    features: ['Mobile payments', 'Instant transfers', 'QR payments'],
-    supportedCurrencies: ['SAR'],
-    requiresWebhook: true,
-  },
-  tamara: {
-    name: 'Tamara',
-    nameAr: 'تمارا',
-    icon: '/icons/tamara.svg',
-    description: 'Buy now, pay later in Saudi Arabia',
-    descriptionAr: 'اشتر الآن، ادفع لاحقاً في المملكة',
-    features: ['Split payments', 'Interest-free', 'Instant approval'],
-    supportedCurrencies: ['SAR', 'AED'],
-    requiresWebhook: true,
   },
 };
 

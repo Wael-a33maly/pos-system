@@ -6,25 +6,17 @@
 // النظام الأساسي
 export * from './payment-gateway';
 
-// البوابات
-export * from './gateways/paypal';
-export * from './gateways/stripe';
+// البوابات المحلية (مدى و Apple Pay فقط)
 export * from './gateways/local';
 
 // تهيئة مدير البوابات
 import { paymentManager } from './payment-gateway';
-import { paypalGateway } from './gateways/paypal';
-import { stripeGateway } from './gateways/stripe';
-import { madaGateway, applePayGateway, stcPayGateway, tamaraGateway } from './gateways/local';
+import { madaGateway, applePayGateway } from './gateways/local';
 
 // تسجيل البوابات
 export function initializeGateways(): void {
-  paymentManager.registerGateway(paypalGateway);
-  paymentManager.registerGateway(stripeGateway);
   paymentManager.registerGateway(madaGateway);
   paymentManager.registerGateway(applePayGateway);
-  paymentManager.registerGateway(stcPayGateway);
-  paymentManager.registerGateway(tamaraGateway);
 }
 
 // تهيئة مدير البوابات تلقائياً

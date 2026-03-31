@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 
 // ==================== الأنواع الأساسية ====================
 
-export type PaymentGatewayCode = 'paypal' | 'stripe' | 'mada' | 'apple_pay' | 'stc_pay' | 'tamara';
+export type PaymentGatewayCode = 'mada' | 'apple_pay';
 
 export type PaymentStatus = 
   | 'pending' 
@@ -287,24 +287,6 @@ export class PaymentGatewayManager {
     const envPrefix = code.toUpperCase().replace(/[^A-Z]/g, '_');
     
     const defaultConfigs: Record<PaymentGatewayCode, GatewayConfig> = {
-      paypal: {
-        enabled: process.env.PAYPAL_ENABLED === 'true',
-        testMode: process.env.PAYPAL_TEST_MODE !== 'false',
-        apiKey: process.env.PAYPAL_CLIENT_ID,
-        secretKey: process.env.PAYPAL_CLIENT_SECRET,
-        webhookSecret: process.env.PAYPAL_WEBHOOK_SECRET,
-        returnUrl: process.env.PAYPAL_RETURN_URL,
-        cancelUrl: process.env.PAYPAL_CANCEL_URL,
-        supportedCurrencies: ['USD', 'EUR', 'GBP', 'SAR'],
-      },
-      stripe: {
-        enabled: process.env.STRIPE_ENABLED === 'true',
-        testMode: process.env.STRIPE_TEST_MODE !== 'false',
-        apiKey: process.env.STRIPE_PUBLISHABLE_KEY,
-        secretKey: process.env.STRIPE_SECRET_KEY,
-        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-        supportedCurrencies: ['USD', 'EUR', 'GBP', 'SAR', 'AED'],
-      },
       mada: {
         enabled: process.env.MADA_ENABLED === 'true',
         testMode: process.env.MADA_TEST_MODE !== 'false',
@@ -319,21 +301,6 @@ export class PaymentGatewayManager {
         apiKey: process.env.APPLE_PAY_MERCHANT_ID,
         secretKey: process.env.APPLE_PAY_CERTIFICATE,
         supportedCurrencies: ['SAR', 'USD', 'EUR', 'GBP', 'AED'],
-      },
-      stc_pay: {
-        enabled: process.env.STC_PAY_ENABLED === 'true',
-        testMode: process.env.STC_PAY_TEST_MODE !== 'false',
-        apiKey: process.env.STC_PAY_API_KEY,
-        secretKey: process.env.STC_PAY_SECRET_KEY,
-        merchantId: process.env.STC_PAY_MERCHANT_ID,
-        supportedCurrencies: ['SAR'],
-      },
-      tamara: {
-        enabled: process.env.TAMARA_ENABLED === 'true',
-        testMode: process.env.TAMARA_TEST_MODE !== 'false',
-        apiKey: process.env.TAMARA_API_KEY,
-        secretKey: process.env.TAMARA_SECRET_KEY,
-        supportedCurrencies: ['SAR', 'AED', 'KWD', 'QAR', 'BHD'],
       },
     };
     
