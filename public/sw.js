@@ -1,20 +1,25 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'pos-cache-v1';
-const OFFLINE_URL = '/offline';
+const CACHE_NAME = 'pos-cache-v2';
+const OFFLINE_URL = '/';
 
 const STATIC_ASSETS = [
   '/',
-  '/?mode=pos',
   '/manifest.json',
-  '/offline',
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(STATIC_ASSETS);
+      // Cache assets individually to avoid failure if one fails
+      return Promise.allSettled(
+        STATIC_ASSETS.map(function(url) {
+          return cache.add(url).catch(function(err) {
+            console.log('Failed to cache:', url, err);
+          });
+        })
+      );
     })
   );
   self.skipWaiting();
@@ -55,6 +60,11 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
+  // Skip external requests
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   // For navigation requests
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -84,17 +94,19 @@ self.addEventListener('fetch', function(event) {
       if (cachedResponse) {
         // Update cache in background
         fetch(request).then(function(response) {
-          if (response.status === 200) {
+          if (response && response.status === 200) {
             caches.open(CACHE_NAME).then(function(cache) {
               cache.put(request, response);
             });
           }
+        }).catch(function() {
+          // Ignore fetch errors for background updates
         });
         return cachedResponse;
       }
 
       return fetch(request).then(function(response) {
-        if (response.status === 200) {
+        if (response && response.status === 200) {
           var responseClone = response.clone();
           caches.open(CACHE_NAME).then(function(cache) {
             cache.put(request, responseClone);

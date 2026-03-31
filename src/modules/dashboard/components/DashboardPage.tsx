@@ -344,9 +344,9 @@ export function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px] w-full min-w-0">
                 {dailyChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <AreaChart data={dailyChartData}>
                     <defs>
                       <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
@@ -422,9 +422,9 @@ export function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px] w-full min-w-0">
                 {hourlyChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={hourlyChartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="hourLabel" className="text-xs" />
@@ -472,9 +472,9 @@ export function DashboardPage() {
               <CardDescription>توزيع طرق الدفع اليوم</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
+              <div className="h-[200px] w-full min-w-0">
                 {paymentChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <PieChart>
                     <Pie
                       data={paymentChartData}
@@ -607,9 +607,9 @@ export function DashboardPage() {
               <CardDescription>مقارنة المبيعات هذا الأسبوع</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[180px]">
+              <div className="h-[180px] w-full min-w-0">
                 {data.branchPerformance && data.branchPerformance.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={data.branchPerformance} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis type="number" className="text-xs" />

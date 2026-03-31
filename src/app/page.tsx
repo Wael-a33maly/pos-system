@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, lazy, useMemo } from 'react';
+import { useEffect, Suspense, lazy, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/layout/Layout';
 import { useAppStore } from '@/store';
@@ -24,37 +24,10 @@ function PageSkeleton() {
   );
 }
 
-// Dashboard Module
+// Core Pages - Always needed
 const DashboardPage = lazy(() => import('@/modules/dashboard/components/DashboardPage').then(m => ({ default: m.DashboardPage })));
-// POS Module
 const POSPage = lazy(() => import('@/modules/pos/components/POSPage').then(m => ({ default: m.POSPage })));
-// Products Module
-const ProductsPage = lazy(() => import('@/modules/products/components/ProductsPage').then(m => ({ default: m.ProductsPage })));
-const CategoriesPage = lazy(() => import('@/modules/products/components/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
-const BrandsPage = lazy(() => import('@/modules/products/components/BrandsPage').then(m => ({ default: m.BrandsPage })));
-const BarcodePrintPage = lazy(() => import('@/modules/products/components/BarcodePrintPage').then(m => ({ default: m.BarcodePrintPage })));
-const ImportProductsPage = lazy(() => import('@/modules/products/components/ImportProductsPage').then(m => ({ default: m.ImportProductsPage })));
-// Customers Module
-const CustomersPage = lazy(() => import('@/modules/customers/components/CustomersPage').then(m => ({ default: m.CustomersPage })));
-// Invoices Module
-const InvoicesPage = lazy(() => import('@/modules/invoices/components/InvoicesPage').then(m => ({ default: m.InvoicesPage })));
-// Reports Module
-const ReportsPage = lazy(() => import('@/modules/reports/components/ReportsPage').then(m => ({ default: m.ReportsPage })));
-// Shifts Module
-const ShiftManagementPage = lazy(() => import('@/modules/shifts/components/ShiftManagementPage').then(m => ({ default: m.ShiftManagementPage })));
-const AuditLogsPage = lazy(() => import('@/modules/shifts/components/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })));
-// Settings Module
-const UnifiedSettingsPage = lazy(() => import('@/modules/settings/components/UnifiedSettingsPage').then(m => ({ default: m.UnifiedSettingsPage })));
-// Auth Module
 const LoginPage = lazy(() => import('@/modules/auth/components/LoginPage').then(m => ({ default: m.LoginPage })));
-// Users Module
-const UsersPage = lazy(() => import('@/modules/users/components/UsersPage').then(m => ({ default: m.UsersPage })));
-// Suppliers Module
-const SuppliersPage = lazy(() => import('@/modules/suppliers/components/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
-// Expenses Module
-const ExpensesPage = lazy(() => import('@/modules/expenses/components/ExpensesPage').then(m => ({ default: m.ExpensesPage })));
-// Accounts Module
-const AccountsPage = lazy(() => import('@/modules/accounts/components/AccountsPage').then(m => ({ default: m.AccountsPage })));
 
 function ProfilePage() {
   const { user } = useAppStore();
@@ -74,16 +47,125 @@ function ProfilePage() {
   );
 }
 
-const PAGE_COMPONENTS: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
-  'users': UsersPage, 'roles': UsersPage,
-  'shifts': ShiftManagementPage, 'shift-close': ShiftManagementPage, 'shift-closures': ShiftManagementPage, 'audit-logs': AuditLogsPage,
-  'products': ProductsPage, 'categories': CategoriesPage, 'brands': BrandsPage,
-  'customers': CustomersPage, 'suppliers': SuppliersPage, 'supplier-companies': SuppliersPage,
-  'invoices': InvoicesPage, 'returns': InvoicesPage,
-  'expenses': ExpensesPage, 'expense-categories': ExpensesPage,
-  'accounts': AccountsPage, 'reports': ReportsPage, 'settings': UnifiedSettingsPage,
-  'barcode': BarcodePrintPage, 'import': ImportProductsPage,
-};
+// Dynamic page loader component
+function DynamicPage({ page }: { page: string }) {
+  const [PageComponent, setPageComponent] = useState<React.ComponentType | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    
+    const loadPage = async () => {
+      try {
+        let loadedModule;
+        switch (page) {
+          case 'users':
+            loadedModule = await import('@/modules/users/components/UsersPage');
+            break;
+          case 'roles':
+          case 'permissions':
+            loadedModule = await import('@/modules/roles/components/RolesPage');
+            break;
+          case 'shifts':
+          case 'shift-close':
+          case 'shift-closures':
+            loadedModule = await import('@/modules/shifts/components/ShiftManagementPage');
+            break;
+          case 'audit-logs':
+            loadedModule = await import('@/modules/shifts/components/AuditLogsPage');
+            break;
+          case 'products':
+            loadedModule = await import('@/modules/products/components/ProductsPage');
+            break;
+          case 'categories':
+            loadedModule = await import('@/modules/products/components/CategoriesPage');
+            break;
+          case 'brands':
+            loadedModule = await import('@/modules/products/components/BrandsPage');
+            break;
+          case 'customers':
+            loadedModule = await import('@/modules/customers/components/CustomersPage');
+            break;
+          case 'suppliers':
+          case 'supplier-companies':
+            loadedModule = await import('@/modules/suppliers/components/SuppliersPage');
+            break;
+          case 'invoices':
+            loadedModule = await import('@/modules/invoices/components/InvoicesPage');
+            break;
+          case 'returns':
+            loadedModule = await import('@/modules/returns/components/ReturnsPage');
+            break;
+          case 'expenses':
+          case 'expense-categories':
+            loadedModule = await import('@/modules/expenses/components/ExpensesPage');
+            break;
+          case 'accounts':
+            loadedModule = await import('@/modules/accounts/components/AccountsPage');
+            break;
+          case 'chart-of-accounts':
+            loadedModule = await import('@/modules/accounts/components/ChartOfAccountsPage');
+            break;
+          case 'journal-entries':
+            loadedModule = await import('@/modules/accounts/components/JournalEntriesPage');
+            break;
+          case 'financial-reports':
+            loadedModule = await import('@/modules/accounts/components/FinancialReportsPage');
+            break;
+          case 'reports':
+            loadedModule = await import('@/modules/reports/components/ReportsPage');
+            break;
+          case 'settings':
+            loadedModule = await import('@/modules/settings/components/UnifiedSettingsPage');
+            break;
+          case 'barcode':
+            loadedModule = await import('@/modules/products/components/BarcodePrintPage');
+            break;
+          case 'import':
+            loadedModule = await import('@/modules/products/components/ImportProductsPage');
+            break;
+          case 'printing':
+            loadedModule = await import('@/modules/printing/components/PrinterSelector');
+            break;
+          case 'transfers':
+            loadedModule = await import('@/modules/transfers/components/TransfersPage');
+            break;
+          case 'loyalty':
+            loadedModule = await import('@/modules/loyalty/components/LoyaltyPage');
+            break;
+          case 'scheduled-reports':
+            loadedModule = await import('@/modules/scheduled-reports/components/ScheduledReportsPage');
+            break;
+          case 'offers':
+            loadedModule = await import('@/modules/offers/components/OffersPage');
+            break;
+          case 'inventory':
+            loadedModule = await import('@/modules/inventory/components/InventoryPage');
+            break;
+          case 'purchases':
+            loadedModule = await import('@/modules/purchases/components/PurchasesPage');
+            break;
+          default:
+            loadedModule = await import('@/modules/dashboard/components/DashboardPage');
+        }
+        setPageComponent(() => loadedModule.default);
+      } catch (error) {
+        console.error('Failed to load page:', error);
+        const fallbackModule = await import('@/modules/dashboard/components/DashboardPage');
+        setPageComponent(() => fallbackModule.default);
+      }
+      setLoading(false);
+    };
+
+    loadPage();
+  }, [page]);
+
+  if (loading || !PageComponent) {
+    return <PageSkeleton />;
+  }
+
+  return <PageComponent />;
+}
 
 function PageContent() {
   const searchParams = useSearchParams();
@@ -93,20 +175,59 @@ function PageContent() {
 
   useEffect(() => { setPosMode(mode === 'pos'); }, [mode, setPosMode]);
 
-  const PageComponent = useMemo(() => {
-    if (!isAuthenticated && page !== 'login') return LoginPage;
-    if (page === 'login') return LoginPage;
-    if (mode === 'pos') return POSPage;
-    if (page === 'profile') return null;
-    return PAGE_COMPONENTS[page || ''] || DashboardPage;
-  }, [isAuthenticated, page, mode]);
+  // Auth check
+  if (!isAuthenticated && page !== 'login') {
+    return (
+      <Layout>
+        <Suspense fallback={<PageSkeleton />}>
+          <LoginPage />
+        </Suspense>
+      </Layout>
+    );
+  }
 
-  if (page === 'profile' && isAuthenticated) return <Layout><ProfilePage /></Layout>;
+  if (page === 'login') {
+    return (
+      <Layout>
+        <Suspense fallback={<PageSkeleton />}>
+          <LoginPage />
+        </Suspense>
+      </Layout>
+    );
+  }
 
+  // POS mode
+  if (mode === 'pos') {
+    return (
+      <Layout>
+        <Suspense fallback={<PageSkeleton />}>
+          <POSPage />
+        </Suspense>
+      </Layout>
+    );
+  }
+
+  // Profile page
+  if (page === 'profile' && isAuthenticated) {
+    return <Layout><ProfilePage /></Layout>;
+  }
+
+  // Dashboard (default)
+  if (!page) {
+    return (
+      <Layout>
+        <Suspense fallback={<PageSkeleton />}>
+          <DashboardPage />
+        </Suspense>
+      </Layout>
+    );
+  }
+
+  // Dynamic pages
   return (
     <Layout>
       <Suspense fallback={<PageSkeleton />}>
-        {PageComponent && <PageComponent />}
+        <DynamicPage page={page} />
       </Suspense>
     </Layout>
   );

@@ -30,6 +30,7 @@ model Branch {
   customers   Customer[]
   suppliers   Supplier[]
   inventory   Inventory[]
+  returnRequests ReturnRequest[]
 }
 
 // ==================== المستخدمين والأدوار ====================
@@ -54,6 +55,8 @@ model User {
   notifications Notification[]
   auditLogs   AuditLog[]
   closedShifts Shift[] @relation("ShiftCloser")
+  returnRequests ReturnRequest[]
+  processedReturns ReturnRequest[] @relation("ReturnProcessor")
 }
 
 enum UserRole {
@@ -181,6 +184,7 @@ model Customer {
   
   branch      Branch?  @relation(fields: [branchId], references: [id])
   invoices    Invoice[]
+  returnRequests ReturnRequest[]
 }
 
 // ==================== المنتجات ====================
@@ -214,6 +218,14 @@ model Product {
   variants      ProductVariant[]
   inventory     Inventory[]
   invoiceItems  InvoiceItem[]
+  returnItems   ReturnItem[]
+
+  // فهارس الأداء
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([branchId, isActive])
+  @@index([isActive])
+  @@index([name])
 }
 
 model ProductVariant {
@@ -233,6 +245,7 @@ model ProductVariant {
   
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   invoiceItems InvoiceItem[]
+  returnItems  ReturnItem[]
 }
 
 // ==================== المخزون ====================
@@ -279,6 +292,15 @@ model Invoice {
   payments        Payment[]
   returns         Invoice[]  @relation("InvoiceReturns")
   originalInvoice Invoice?   @relation("InvoiceReturns", fields: [originalInvoiceId], references: [id])
+  returnRequests  ReturnRequest[]
+
+  // فهارس الأداء
+  @@index([branchId, createdAt])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([customerId])
+  @@index([shiftId])
+  @@index([paymentStatus])
 }
 
 enum InvoiceStatus {
@@ -352,6 +374,12 @@ model Shift {
   invoices        Invoice[]
   expenses        Expense[]
   closedByUser    User?     @relation("ShiftCloser", fields: [closedBy], references: [id])
+
+  // فهارس الأداء
+  @@index([branchId, status])
+  @@index([userId, status])
+  @@index([startTime])
+  @@index([status])
 }
 
 enum ShiftStatus {
@@ -489,14 +517,22 @@ enum AccountType {
 }
 
 model JournalEntry {
-  id          String   @id @default(cuid())
-  date        DateTime @default(now())
+  id          String           @id @default(cuid())
+  entryNumber String           @unique
+  date        DateTime         @default(now())
   reference   String?
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      JournalStatus    @default(DRAFT)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   
   lines       JournalEntryLine[]
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+  REVERSED
 }
 
 model JournalEntryLine {
@@ -509,6 +545,72 @@ model JournalEntryLine {
   
   entry       JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   account     Account      @relation(fields: [accountId], references: [id])
+}
+
+// ==================== المرتجعات ====================
+model ReturnRequest {
+  id              String       @id @default(cuid())
+  returnNumber    String       @unique
+  originalInvoiceId String
+  customerId      String?
+  branchId        String
+  userId          String
+  reason          ReturnReason
+  status          ReturnStatus @default(PENDING)
+  totalAmount     Float        @default(0)
+  refundMethod    RefundMethod
+  notes           String?
+  processedBy     String?
+  processedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  originalInvoice Invoice      @relation(fields: [originalInvoiceId], references: [id])
+  customer        Customer?    @relation(fields: [customerId], references: [id])
+  branch          Branch       @relation(fields: [branchId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+  processedByUser User?        @relation("ReturnProcessor", fields: [processedBy], references: [id])
+  items           ReturnItem[]
+}
+
+model ReturnItem {
+  id              String      @id @default(cuid())
+  returnRequestId String
+  productId       String?
+  variantId       String?
+  invoiceItemId   String
+  productName     String
+  quantity        Float       @default(1)
+  unitPrice       Float       @default(0)
+  totalAmount     Float       @default(0)
+  reason          ReturnReason?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  
+  returnRequest   ReturnRequest    @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  product         Product?         @relation(fields: [productId], references: [id])
+  variant         ProductVariant?  @relation(fields: [variantId], references: [id])
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  CUSTOMER_CHANGE
+  OTHER
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum RefundMethod {
+  CASH
+  CREDIT
+  EXCHANGE
 }
 
 // ==================== ملخصات المبيعات ====================
