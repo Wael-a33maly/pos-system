@@ -14,14 +14,10 @@ function validateAmount(amount: number, currency: Currency, gatewayCode: Payment
     return { valid: false, error: 'Amount must be a positive number' };
   }
 
-  // الحد الأدنى والأقصى للمبلغ
+  // الحد الأدنى والأقصى للمبلغ (بوابات محلية فقط: مدى و Apple Pay)
   const limits: Record<PaymentGatewayCode, { min: number; max: number }> = {
-    paypal: { min: 0.01, max: 100000 },
-    stripe: { min: 0.50, max: 999999.99 },
     mada: { min: 1, max: 100000 },
     apple_pay: { min: 1, max: 100000 },
-    stc_pay: { min: 1, max: 20000 },
-    tamara: { min: 100, max: 10000 }, // للدفع بالتقسيط
   };
 
   const limit = limits[gatewayCode];

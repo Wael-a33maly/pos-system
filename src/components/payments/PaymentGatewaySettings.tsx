@@ -442,7 +442,7 @@ function GatewayConfigForm({ gateway, onSave, saving }: GatewayConfigFormProps) 
           {needsApiKey && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key / Client ID</Label>
+                <Label htmlFor="apiKey">API Key</Label>
                 <div className="relative">
                   <Input
                     id="apiKey"
@@ -463,7 +463,7 @@ function GatewayConfigForm({ gateway, onSave, saving }: GatewayConfigFormProps) 
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {gateway.code === 'paypal' ? 'PayPal Client ID' : 'Stripe Publishable Key'}
+                  مفتاح API من مزود الخدمة
                 </p>
               </div>
 
@@ -489,7 +489,7 @@ function GatewayConfigForm({ gateway, onSave, saving }: GatewayConfigFormProps) 
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {gateway.code === 'paypal' ? 'PayPal Client Secret' : 'Stripe Secret Key'}
+                  المفتاح السري من مزود الخدمة
                 </p>
               </div>
             </>

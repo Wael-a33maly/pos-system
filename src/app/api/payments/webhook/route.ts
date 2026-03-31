@@ -74,61 +74,6 @@ async function handleWebhookEvent(
   let updateData: Record<string, unknown> = {};
 
   switch (eventType) {
-    // PayPal events
-    case 'CHECKOUT.ORDER.APPROVED':
-    case 'PAYMENT.CAPTURE.COMPLETED':
-      transactionId = (data as Record<string, unknown>).reference_id as string || 
-                      (data as Record<string, unknown>).invoice_id as string;
-      updateData = {
-        status: 'completed',
-        completedAt: new Date(),
-        processedAt: new Date(),
-      };
-      break;
-
-    case 'PAYMENT.CAPTURE.DENIED':
-    case 'PAYMENT.CAPTURE.REFUNDED':
-      transactionId = (data as Record<string, unknown>).reference_id as string;
-      updateData = {
-        status: eventType.includes('REFUNDED') ? 'refunded' : 'failed',
-        processedAt: new Date(),
-      };
-      break;
-
-    // Stripe events
-    case 'payment_intent.succeeded': {
-      const metadata = (data as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      transactionId = metadata?.orderId as string || (data as Record<string, unknown>).id as string;
-      updateData = {
-        status: 'completed',
-        completedAt: new Date(),
-        processedAt: new Date(),
-        gatewayTransactionId: (data as Record<string, unknown>).id,
-      };
-      break;
-    }
-
-    case 'payment_intent.payment_failed': {
-      const metadata = (data as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
-      const lastPaymentError = (data as Record<string, unknown>).last_payment_error as Record<string, unknown> | undefined;
-      transactionId = metadata?.orderId as string || (data as Record<string, unknown>).id as string;
-      updateData = {
-        status: 'failed',
-        processedAt: new Date(),
-        errorMessage: lastPaymentError?.message as string,
-      };
-      break;
-    }
-
-    case 'charge.refunded':
-      transactionId = (data as Record<string, unknown>).payment_intent as string;
-      updateData = {
-        status: 'refunded',
-        refundedAt: new Date(),
-        refundAmount: (data as Record<string, unknown>).amount_refunded,
-      };
-      break;
-
     // Mada events
     case 'payment.completed':
       transactionId = (data as Record<string, unknown>).orderId as string ||
@@ -150,11 +95,9 @@ async function handleWebhookEvent(
       };
       break;
 
-    // Tamara events
-    case 'order.authorised':
-    case 'order.captured':
-      transactionId = (data as Record<string, unknown>).order_reference_id as string ||
-                      (data as Record<string, unknown>).order_id as string;
+    // Apple Pay events
+    case 'applepay.payment.completed':
+      transactionId = (data as Record<string, unknown>).orderId as string;
       updateData = {
         status: 'completed',
         completedAt: new Date(),
@@ -162,12 +105,12 @@ async function handleWebhookEvent(
       };
       break;
 
-    case 'order.cancelled':
-      transactionId = (data as Record<string, unknown>).order_reference_id as string ||
-                      (data as Record<string, unknown>).order_id as string;
+    case 'applepay.payment.failed':
+      transactionId = (data as Record<string, unknown>).orderId as string;
       updateData = {
-        status: 'cancelled',
+        status: 'failed',
         processedAt: new Date(),
+        errorMessage: (data as Record<string, unknown>).errorMessage as string,
       };
       break;
 
