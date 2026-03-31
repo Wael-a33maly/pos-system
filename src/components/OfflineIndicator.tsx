@@ -8,7 +8,7 @@ import {
   RefreshCw, 
   Database,
   CloudOff,
-  Sync
+  Cloud
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -186,7 +186,7 @@ export function OfflineIndicator() {
         >
           <Alert className="bg-blue-500 text-white border-blue-600 shadow-lg shadow-blue-500/25">
             <div className="flex items-start gap-3">
-              <Sync className="h-5 w-5 mt-0.5" />
+              <RefreshCw className="h-5 w-5 mt-0.5" />
               <div className="flex-1">
                 <AlertDescription className="font-medium">
                   عاد الاتصال - لديك {totalPending} عنصر ينتظر المزامنة
