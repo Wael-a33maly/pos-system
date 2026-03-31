@@ -1,0 +1,840 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== الفروع ====================
+model Branch {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  users       User[]
+  products    Product[]
+  invoices    Invoice[]
+  shifts      Shift[]
+  expenses    Expense[]
+  customers   Customer[]
+  suppliers   Supplier[]
+  inventory   Inventory[]
+}
+
+// ==================== المستخدمين والأدوار ====================
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  nameAr      String?
+  phone       String?
+  avatar      String?
+  role        UserRole @default(USER)
+  branchId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  shifts      Shift[]
+  invoices    Invoice[]
+  permissions Permission[]
+  notifications Notification[]
+  auditLogs   AuditLog[]
+  closedShifts Shift[] @relation("ShiftCloser")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  BRANCH_ADMIN
+  USER
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  userId      String
+  module      String   // dashboard, users, products, invoices, expenses, reports, settings
+  action      String   // view, create, edit, delete
+  allowed     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, module, action])
+}
+
+// ==================== الإعدادات ====================
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== طرق الدفع ====================
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String
+  code        String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  payments    Payment[]
+}
+
+// ==================== العملات ====================
+model Currency {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String
+  code        String   @unique
+  symbol      String
+  decimalPlaces Int    @default(2)
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== الفئات ====================
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  parentId    String?
+  image       String?
+  color       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+}
+
+// ==================== البراندات ====================
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  logo        String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  products    Product[]
+}
+
+// ==================== الشركات الموردة ====================
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  phone       String?
+  email       String?
+  address     String?
+  taxNumber   String?
+  notes       String?
+  branchId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  products    Product[]
+}
+
+// ==================== العملاء ====================
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  phone       String?
+  email       String?
+  address     String?
+  taxNumber   String?
+  notes       String?
+  branchId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  invoices    Invoice[]
+}
+
+// ==================== المنتجات ====================
+model Product {
+  id            String   @id @default(cuid())
+  barcode       String   @unique
+  sku           String?
+  name          String
+  nameAr        String?
+  description   String?
+  categoryId    String?
+  brandId       String?
+  supplierId    String?
+  branchId      String?
+  costPrice     Float    @default(0)
+  sellingPrice  Float    @default(0)
+  wholesalePrice Float?
+  minStock      Int      @default(0)
+  maxStock      Int?
+  unit          String   @default("piece")
+  image         String?
+  hasVariants   Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  category      Category?  @relation(fields: [categoryId], references: [id])
+  brand         Brand?     @relation(fields: [brandId], references: [id])
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id])
+  branch        Branch?    @relation(fields: [branchId], references: [id])
+  variants      ProductVariant[]
+  inventory     Inventory[]
+  invoiceItems  InvoiceItem[]
+}
+
+model ProductVariant {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  nameAr      String?
+  sku         String?
+  barcode     String?
+  costPrice   Float    @default(0)
+  sellingPrice Float   @default(0)
+  stock       Int      @default(0)
+  attributes  String?  // JSON string for variant attributes like {"color": "red", "size": "XL"}
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+}
+
+// ==================== المخزون ====================
+model Inventory {
+  id          String   @id @default(cuid())
+  productId   String
+  branchId    String
+  quantity    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  
+  product     Product  @relation(fields: [productId], references: [id])
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([productId, branchId])
+}
+
+// ==================== الفواتير ====================
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique
+  branchId        String
+  userId          String
+  customerId      String?
+  shiftId         String?
+  status          InvoiceStatus @default(COMPLETED)
+  paymentStatus   PaymentStatus @default(PAID)
+  subtotal        Float    @default(0)
+  taxAmount       Float    @default(0)
+  discountAmount  Float    @default(0)
+  totalAmount     Float    @default(0)
+  paidAmount      Float    @default(0)
+  changeAmount    Float    @default(0)
+  notes           String?
+  isReturn        Boolean  @default(false)
+  originalInvoiceId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  branch          Branch     @relation(fields: [branchId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
+  customer        Customer?  @relation(fields: [customerId], references: [id])
+  shift           Shift?     @relation(fields: [shiftId], references: [id])
+  items           InvoiceItem[]
+  payments        Payment[]
+  returns         Invoice[]  @relation("InvoiceReturns")
+  originalInvoice Invoice?   @relation("InvoiceReturns", fields: [originalInvoiceId], references: [id])
+}
+
+enum InvoiceStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+model InvoiceItem {
+  id            String   @id @default(cuid())
+  invoiceId     String
+  productId     String?
+  variantId     String?
+  productName   String
+  quantity      Float    @default(1)
+  unitPrice     Float    @default(0)
+  costPrice     Float    @default(0)
+  discountAmount Float   @default(0)
+  taxAmount     Float    @default(0)
+  totalAmount   Float    @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
+  
+  invoice       Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product       Product?       @relation(fields: [productId], references: [id])
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  invoiceId       String
+  paymentMethodId String
+  amount          Float    @default(0)
+  reference       String?  // Reference number for payment
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+// ==================== الورديات ====================
+model Shift {
+  id              String   @id @default(cuid())
+  branchId        String
+  userId          String
+  startTime       DateTime @default(now())
+  endTime         DateTime?
+  openingCash     Float    @default(0)
+  closingCash     Float?
+  expectedCash    Float?
+  totalSales      Float    @default(0)
+  totalReturns    Float    @default(0)
+  totalExpenses   Float    @default(0)
+  totalPayments   Float    @default(0)
+  status          ShiftStatus @default(OPEN)
+  notes           String?
+  closedBy        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  branch          Branch    @relation(fields: [branchId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+  invoices        Invoice[]
+  expenses        Expense[]
+  closedByUser    User?     @relation("ShiftCloser", fields: [closedBy], references: [id])
+}
+
+enum ShiftStatus {
+  OPEN
+  CLOSED
+}
+
+// ==================== المصروفات ====================
+model ExpenseCategory {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  parentId    String?  // للفئات الفرعية
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  parent      ExpenseCategory?  @relation("ExpenseCategoryHierarchy", fields: [parentId], references: [id])
+  children    ExpenseCategory[] @relation("ExpenseCategoryHierarchy")
+  expenses    Expense[]
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  branchId    String
+  shiftId     String?
+  categoryId  String
+  amount      Float
+  description String?
+  userId      String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch           @relation(fields: [branchId], references: [id])
+  shift       Shift?           @relation(fields: [shiftId], references: [id])
+  category    ExpenseCategory  @relation(fields: [categoryId], references: [id])
+}
+
+// ==================== الإشعارات ====================
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  titleAr     String?
+  message     String
+  messageAr   String?
+  type        String
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== سجل التدقيق ====================
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  module      String
+  recordId    String?
+  oldData     String?  // JSON
+  newData     String?  // JSON
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+// ==================== إعدادات الطباعة ====================
+model PrintTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  type        String   // invoice, barcode, report
+  paperSize   String   @default("A4")
+  width       Int?
+  height      Int?
+  template    String   // HTML template
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== إعدادات الباركود ====================
+model BarcodeSetting {
+  id              String   @id @default(cuid())
+  name            String
+  paperWidth      Int      @default(80)
+  paperHeight     Int      @default(50)
+  labelWidth      Int      @default(70)
+  labelHeight     Int      @default(40)
+  columns         Int      @default(3)
+  rows            Int      @default(8)
+  showProductName Boolean  @default(true)
+  showPrice       Boolean  @default(true)
+  showBarcode     Boolean  @default(true)
+  showSku         Boolean  @default(false)
+  fontSize        Int      @default(10)
+  barcodeHeight   Int      @default(20)
+  isActive        Boolean  @default(true)
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ==================== الحسابات ====================
+model Account {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  nameAr      String?
+  type        AccountType
+  parentId    String?
+  balance     Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  parent      Account?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children    Account[] @relation("AccountHierarchy")
+  lines       JournalEntryLine[]
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model JournalEntry {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  reference   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  lines       JournalEntryLine[]
+}
+
+model JournalEntryLine {
+  id          String   @id @default(cuid())
+  entryId     String
+  accountId   String
+  debit       Float    @default(0)
+  credit      Float    @default(0)
+  description String?
+  
+  entry       JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account     Account      @relation(fields: [accountId], references: [id])
+}
+
+// ==================== ملخصات المبيعات ====================
+model DailySalesSummary {
+  id            String   @id @default(cuid())
+  branchId      String
+  date          DateTime
+  totalSales    Float    @default(0)
+  totalReturns  Float    @default(0)
+  totalDiscount Float    @default(0)
+  totalTax      Float    @default(0)
+  totalProfit   Float    @default(0)
+  invoiceCount  Int      @default(0)
+  customerCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([branchId, date])
+}
+
+model HourlySalesSummary {
+  id            String   @id @default(cuid())
+  branchId      String
+  date          DateTime
+  hour          Int      // 0-23
+  totalSales    Float    @default(0)
+  invoiceCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([branchId, date, hour])
+}
+
+model ProductSalesSummary {
+  id            String   @id @default(cuid())
+  productId     String
+  branchId      String
+  date          DateTime
+  quantitySold  Float    @default(0)
+  totalRevenue  Float    @default(0)
+  totalProfit   Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([productId, branchId, date])
+}
+
+// ==================== تفاصيل إغلاق الوردية ====================
+model ShiftCloseDetail {
+  id                String   @id @default(cuid())
+  shiftId           String   @unique
+  userId            String
+  closingNumber     Int      // مسلسل فريد لكل مستخدم
+  closingDate       DateTime @default(now())
+  
+  // الملخص المالي
+  openingCash       Float    @default(0)
+  cashSales         Float    @default(0)
+  cardSales         Float    @default(0)
+  otherPayments     Float    @default(0)
+  totalSales        Float    @default(0)
+  totalReturns      Float    @default(0)
+  totalDiscounts    Float    @default(0)
+  totalExpenses     Float    @default(0)
+  expectedCash      Float    @default(0)
+  actualCash        Float    @default(0)
+  cashDifference    Float    @default(0)
+  
+  // ملخص الفواتير
+  totalInvoices     Int      @default(0)
+  completedInvoices Int      @default(0)
+  cancelledInvoices Int      @default(0)
+  returnInvoices    Int      @default(0)
+  
+  // ملخص المنتجات
+  totalItems        Int      @default(0)
+  totalQuantity     Float    @default(0)
+  
+  notes             String?
+  createdAt         DateTime @default(now())
+}
+
+model ShiftTransaction {
+  id              String   @id @default(cuid())
+  shiftId         String
+  type            String   // OPENING, CASH_SALE, CARD_SALE, RETURN, EXPENSE, CASH_IN, CASH_OUT, CLOSING
+  amount          Float    @default(0)
+  reference       String?  // رقم الفاتورة أو المرجع
+  paymentMethod   String?
+  description     String?
+  createdAt       DateTime @default(now())
+}
+
+// ==================== التقارير المحفوظة ====================
+model SavedReport {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  type        String   // sales, products, shifts, profits, customers
+  dateRange   String   // today, week, month, year, custom
+  startDate   DateTime?
+  endDate     DateTime?
+  filters     String?  // JSON
+  data        String   // JSON - البيانات المحفوظة
+  userId      String
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ReportSetting {
+  id              String   @id @default(cuid())
+  userId          String
+  reportType      String
+  defaultRange    String   @default("week")
+  showChart       Boolean  @default(true)
+  showTable       Boolean  @default(true)
+  columns         String?  // JSON array of visible columns
+  sortBy          String?
+  sortOrder       String   @default("desc")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, reportType])
+}
+
+model DashboardSetting {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  layout          String?  // JSON for widget positions
+  widgets         String?  // JSON array of enabled widgets
+  refreshInterval Int      @default(300) // seconds
+  showSales       Boolean  @default(true)
+  showOrders      Boolean  @default(true)
+  showProducts    Boolean  @default(true)
+  showCustomers   Boolean  @default(true)
+  showCharts      Boolean  @default(true)
+  showLowStock    Boolean  @default(true)
+  showRecentSales Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ExportTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  type        String   // csv, excel, pdf
+  module      String   // sales, products, invoices, etc.
+  columns     String   // JSON array of column configs
+  format      String?  // JSON for custom formatting
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== إعدادات نقطة البيع ====================
+model POSSetting {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  
+  // عرض عناصر بطاقة المنتج
+  showProductName       Boolean  @default(true)
+  showProductBarcode    Boolean  @default(true)
+  showProductPrice      Boolean  @default(true)
+  showProductImage      Boolean  @default(true)
+  showProductStock      Boolean  @default(false)
+  
+  // إعدادات الخطوط
+  productNameFontSize   Int      @default(14)  // px
+  productNameColor      String   @default("#000000")
+  productPriceFontSize  Int      @default(16)  // px
+  productPriceColor     String   @default("#16a34a") // green-600
+  productBarcodeFontSize Int     @default(10)  // px
+  productBarcodeColor   String   @default("#6b7280") // gray-500
+  
+  // إعدادات السلة
+  cartItemFontSize      Int      @default(14)
+  cartTotalFontSize     Int      @default(18)
+  
+  // إعدادات العرض
+  cardBorderWidth       Int      @default(2)   // px
+  cardBorderColor       String   @default("#e5e7eb") // gray-200
+  cardBorderRadius      Int      @default(8)   // px
+  cardPadding           Int      @default(12)  // px
+  gridViewColumns       Int      @default(6)   // number of columns
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ==================== قوالب الفواتير الحرارية ====================
+model ReceiptTemplate {
+  id                String   @id @default(cuid())
+  name              String
+  nameAr            String?
+  type              String   @default("invoice") // invoice, return, shift_close, expense, report
+  branchId          String?  // null = default for all branches
+  
+  // أبعاد الورق
+  paperWidth        Int      @default(80)  // mm: 58, 80
+  paperType         String   @default("thermal") // thermal, a4, pdf
+  
+  // إعدادات الخطوط
+  fontFamily         String   @default("monospace")
+  fontSizeSmall      Int      @default(10)
+  fontSizeNormal     Int      @default(12)
+  fontSizeLarge      Int      @default(14)
+  fontSizeTitle      Int      @default(18)
+  fontSizeTotal      Int      @default(16)
+  fontBold           Boolean  @default(true)
+  
+  // إعدادات الـ Header
+  showLogo           Boolean  @default(true)
+  logoAlignment      String   @default("center") // left, center, right
+  showCompanyName    Boolean  @default(true)
+  companyNameStyle   String   @default("bold_large") // normal, bold, bold_large
+  showBranchName     Boolean  @default(true)
+  showBranchAddress  Boolean  @default(true)
+  showBranchPhone    Boolean  @default(true)
+  showTaxNumber      Boolean  @default(true)
+  headerAlignment    String   @default("center")
+  
+  // إعدادات الـ Body
+  showSku            Boolean  @default(false)
+  showProductName    Boolean  @default(true)
+  showVariant        Boolean  @default(true)
+  showQuantity       Boolean  @default(true)
+  showUnitPrice      Boolean  @default(true)
+  showDiscount       Boolean  @default(true)
+  showTax            Boolean  @default(true)
+  showLineTotal      Boolean  @default(true)
+  showBarcode        Boolean  @default(false)
+  
+  // إعدادات الـ Totals
+  showSubtotal       Boolean  @default(true)
+  showDiscountTotal  Boolean  @default(true)
+  showTaxTotal       Boolean  @default(true)
+  showTotal          Boolean  @default(true)
+  showPaid           Boolean  @default(true)
+  showChange         Boolean  @default(true)
+  totalsAlignment    String   @default("right")
+  
+  // إعدادات الـ Footer
+  showThankYou       Boolean  @default(true)
+  thankYouMessage    String   @default("شكراً لزيارتكم")
+  showReturnPolicy   Boolean  @default(false)
+  returnPolicyText   String?
+  showQRCode         Boolean  @default(false)
+  showInvoiceBarcode Boolean  @default(true)
+  showDateTime       Boolean  @default(true)
+  showCashier        Boolean  @default(true)
+  showInvoiceNumber  Boolean  @default(true)
+  
+  // إعدادات متقدمة
+  showSeparator      Boolean  @default(true)
+  separatorChar      String   @default("-")
+  marginTop          Int      @default(0)
+  marginBottom       Int      @default(0)
+  lineSpacing        Int      @default(1)
+  
+  // حالات
+  isDefault          Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ==================== إعدادات الطباعة للفرع ====================
+model BranchPrintConfig {
+  id                    String   @id @default(cuid())
+  branchId              String   @unique
+  
+  // قوالب افتراضية
+  invoiceTemplateId     String?
+  returnTemplateId      String?
+  shiftCloseTemplateId  String?
+  expenseTemplateId     String?
+  
+  // إعدادات الطابعة
+  printerName           String?
+  printerType           String   @default("thermal") // thermal, laser, inkjet
+  connectionType        String   @default("usb") // usb, network, bluetooth
+  printerIp             String?
+  printerPort           Int?
+  
+  // خيارات الطباعة
+  autoPrintInvoice      Boolean  @default(true)
+  autoPrintReturn       Boolean  @default(true)
+  printCopies           Int      @default(1)
+  openCashDrawer        Boolean  @default(true)
+  cutPaper              Boolean  @default(true)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ==================== سجل الطباعة ====================
+model PrintLog {
+  id              String   @id @default(cuid())
+  templateId      String?
+  branchId        String
+  userId          String
+  type            String   // invoice, return, shift_close, expense
+  referenceId     String?  // invoice id, shift id, etc.
+  referenceNumber String?  // invoice number, shift number
+  printMethod     String   // thermal, pdf, browser
+  copies          Int      @default(1)
+  success         Boolean  @default(true)
+  errorMessage    String?
+  printedAt       DateTime @default(now())
+}
+
+// ==================== طرق الدفع في الوردية ====================
+model ShiftPaymentSummary {
+  id              String   @id @default(cuid())
+  shiftId         String
+  paymentMethodId String
+  paymentMethod   String   // cash, card, knet, transfer, etc.
+  totalAmount     Float    @default(0)
+  transactionCount Int     @default(0)
+  returnsAmount   Float    @default(0)
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([shiftId, paymentMethodId])
+}

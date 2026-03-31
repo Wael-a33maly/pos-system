@@ -1,0 +1,79 @@
+{
+  "name": "نظام نقاط البيع",
+  "short_name": "POS",
+  "description": "نظام متكامل لإدارة نقاط البيع والمبيعات والمخزون",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "orientation": "any",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.svg",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.svg",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.svg",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.svg",
+      "sizes": "152x152",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.svg",
+      "sizes": "384x384",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "نقطة البيع",
+      "short_name": "POS",
+      "description": "الانتقال مباشرة لشاشة البيع",
+      "url": "/?mode=pos",
+      "icons": [{ "src": "/icons/icon-96x96.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "المنتجات",
+      "short_name": "المنتجات",
+      "description": "إدارة المنتجات",
+      "url": "/?page=products",
+      "icons": [{ "src": "/icons/icon-96x96.svg", "sizes": "96x96" }]
+    }
+  ]
+}
