@@ -434,6 +434,11 @@ model Notification {
   createdAt   DateTime @default(now())
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // فهارس الأداء
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([type])
 }
 
 // ==================== سجل التدقيق ====================
@@ -939,4 +944,148 @@ model ShiftPaymentSummary {
   createdAt       DateTime @default(now())
   
   @@unique([shiftId, paymentMethodId])
+}
+
+// ==================== بوابات الدفع الإلكتروني ====================
+model PaymentGatewayConfig {
+  id                  String   @id @default(cuid())
+  code                String   @unique  // paypal, stripe, mada, apple_pay, stc_pay, tamara
+  name                String
+  nameAr              String?
+  enabled             Boolean  @default(false)
+  testMode            Boolean  @default(true)
+  
+  // بيانات الاعتماد (مشفرة)
+  apiKey              String?
+  secretKey           String?
+  merchantId          String?
+  webhookSecret       String?
+  
+  // إعدادات URL
+  returnUrl           String?
+  cancelUrl           String?
+  
+  // العملات والحدود
+  supportedCurrencies String?  // JSON array: ["SAR", "USD"]
+  minAmount           Float?
+  maxAmount           Float?
+  
+  // إعدادات إضافية
+  metadata            String?  // JSON
+  
+  // معلومات الاتصال
+  lastConnectedAt     DateTime?
+  connectionStatus    String   @default("disconnected")  // connected, disconnected, error
+  lastError           String?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  transactions        PaymentTransaction[]
+}
+
+// ==================== معاملات الدفع ====================
+model PaymentTransaction {
+  id                    String   @id @default(cuid())
+  transactionId         String   @unique  // معرف المعاملة الداخلي
+  gatewayTransactionId  String?  // معرف المعاملة من البوابة
+  gatewayCode           String   // paypal, stripe, mada, etc.
+  
+  // معلومات الفاتورة
+  invoiceId             String?
+  orderId               String?  // معرف الطلب الخارجي
+  
+  // معلومات المبلغ
+  amount                Float
+  currency              String   @default("SAR")
+  feeAmount             Float    @default(0)  // رسوم البوابة
+  netAmount             Float    @default(0)  // المبلغ الصافي
+  
+  // حالة المعاملة
+  status                String   @default("pending")  // pending, processing, completed, failed, cancelled, refunded, partial_refund
+  
+  // معلومات العميل
+  customerId            String?
+  customerEmail         String?
+  customerPhone         String?
+  customerName          String?
+  
+  // معلومات البطاقة (آمنة)
+  cardLast4             String?
+  cardBrand             String?  // visa, mastercard, mada, etc.
+  cardExpiry            String?
+  
+  // بيانات إضافية
+  metadata              String?  // JSON
+  gatewayResponse       String?  // JSON - رد البوابة الكامل
+  errorMessage          String?
+  errorCode             String?
+  
+  // معلومات الاسترداد
+  refundId              String?
+  refundAmount          Float?
+  refundReason          String?
+  refundedAt            DateTime?
+  
+  // التواريخ
+  initiatedAt           DateTime  @default(now())
+  processedAt           DateTime?
+  completedAt           DateTime?
+  expiredAt             DateTime?
+  
+  // معلومات إضافية
+  ipAddress             String?
+  userAgent             String?
+  
+  // العلاقات
+  gatewayConfigId       String?
+  gatewayConfig         PaymentGatewayConfig? @relation(fields: [gatewayConfigId], references: [id])
+  
+  logs                  PaymentTransactionLog[]
+  
+  @@index([gatewayCode, status])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([status, initiatedAt])
+}
+
+// ==================== سجل معاملات الدفع ====================
+model PaymentTransactionLog {
+  id              String   @id @default(cuid())
+  transactionId   String
+  action          String   // created, processing, completed, failed, refunded, etc.
+  status          String
+  message         String?
+  data            String?  // JSON
+  
+  createdAt       DateTime @default(now())
+  
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  @@index([transactionId, createdAt])
+}
+
+// ==================== أحداث Webhook ====================
+model PaymentWebhookEvent {
+  id              String   @id @default(cuid())
+  gatewayCode     String
+  
+  eventId         String   @unique  // معرف الحدث من البوابة
+  eventType       String   // payment.completed, refund.processed, etc.
+  
+  payload         String   // JSON - البيانات الكاملة
+  signature       String?
+  
+  // حالة المعالجة
+  processed       Boolean  @default(false)
+  processedAt     DateTime?
+  processingError String?
+  
+  // المعاملة المرتبطة
+  transactionId   String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([gatewayCode, processed])
+  @@index([createdAt])
 }

@@ -1,14 +1,18 @@
 {
-  "name": "نظام نقاط البيع",
+  "name": "نظام نقاط البيع - POS System",
   "short_name": "POS",
-  "description": "نظام متكامل لإدارة نقاط البيع والمبيعات والمخزون",
+  "description": "نظام متكامل لإدارة نقاط البيع والمبيعات والمخزون مع دعم العمل بدون إنترنت",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#16a34a",
   "orientation": "any",
   "lang": "ar",
   "dir": "rtl",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "prefer_related_applications": false,
+  "categories": ["business", "finance", "productivity", "utilities"],
+  "iarc_rating_id": "",
   "icons": [
     {
       "src": "/icons/icon-72x72.svg",
@@ -44,36 +48,134 @@
       "src": "/icons/icon-192x192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     },
     {
       "src": "/icons/icon-384x384.svg",
       "sizes": "384x384",
       "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512x512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["business", "finance", "productivity"],
   "shortcuts": [
     {
       "name": "نقطة البيع",
       "short_name": "POS",
-      "description": "الانتقال مباشرة لشاشة البيع",
+      "description": "الانتقال مباشرة لشاشة البيع السريع",
       "url": "/?mode=pos",
-      "icons": [{ "src": "/icons/icon-96x96.svg", "sizes": "96x96" }]
+      "icons": [
+        { "src": "/icons/icon-96x96.svg", "sizes": "96x96", "type": "image/svg+xml" }
+      ]
     },
     {
       "name": "المنتجات",
       "short_name": "المنتجات",
-      "description": "إدارة المنتجات",
+      "description": "إدارة المنتجات والمخزون",
       "url": "/?page=products",
-      "icons": [{ "src": "/icons/icon-96x96.svg", "sizes": "96x96" }]
+      "icons": [
+        { "src": "/icons/icon-96x96.svg", "sizes": "96x96", "type": "image/svg+xml" }
+      ]
+    },
+    {
+      "name": "الفواتير",
+      "short_name": "الفواتير",
+      "description": "عرض وإدارة الفواتير",
+      "url": "/?page=invoices",
+      "icons": [
+        { "src": "/icons/icon-96x96.svg", "sizes": "96x96", "type": "image/svg+xml" }
+      ]
+    },
+    {
+      "name": "التقارير",
+      "short_name": "التقارير",
+      "description": "عرض التقارير والإحصائيات",
+      "url": "/?page=reports",
+      "icons": [
+        { "src": "/icons/icon-96x96.svg", "sizes": "96x96", "type": "image/svg+xml" }
+      ]
+    },
+    {
+      "name": "العملاء",
+      "short_name": "العملاء",
+      "description": "إدارة بيانات العملاء",
+      "url": "/?page=customers",
+      "icons": [
+        { "src": "/icons/icon-96x96.svg", "sizes": "96x96", "type": "image/svg+xml" }
+      ]
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-wide.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "لوحة التحكم الرئيسية"
+    },
+    {
+      "src": "/icons/screenshot-narrow.svg",
+      "sizes": "720x1280",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "شاشة نقطة البيع"
+    }
+  ],
+  "related_applications": [],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "application/json": [".json"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+pos",
+      "url": "/?action=%s"
+    }
+  ],
+  "share_target": {
+    "action": "/api/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["application/json", "text/csv"]
+        }
+      ]
+    }
+  },
+  "widgets": []
 }

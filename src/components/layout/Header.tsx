@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -18,6 +18,8 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -126,14 +128,38 @@ function ThemeButton({
 export function Header({ onToggleSidebar }: HeaderProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { user, currentShift, notifications, logout } = useAppStore();
-  const [showNotifications, setShowNotifications] = useState(false);
+  const { user, currentShift, logout } = useAppStore();
   const [showOpenShiftDialog, setShowOpenShiftDialog] = useState(false);
   const [showReLoginDialog, setShowReLoginDialog] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+  // استخدام Hook الإشعارات المتقدم
+  const {
+    notifications,
+    unreadCount,
+    isLoading: notificationsLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAll,
+    refresh: refreshNotifications,
+  } = useNotifications({
+    limit: 20,
+    autoRefresh: true,
+    refreshInterval: 60000,
+    enableWebSocket: true,
+  });
+
+  // التعامل مع النقر على رابط الإشعار
+  const handleNotificationLinkClick = useCallback(
+    (link: string) => {
+      if (link.startsWith('/')) {
+        router.push(link);
+      }
+    },
+    [router]
+  );
 
   const handlePOSClick = () => {
     // Check if user ID is valid before opening shift dialog
@@ -274,78 +300,18 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             />
           </motion.div>
 
-          {/* Notifications */}
-          <Popover open={showNotifications} onOpenChange={setShowNotifications}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-10 w-10 rounded-xl hover:bg-muted/50"
-              >
-                <NotificationBell count={unreadCount} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-80 p-0 rounded-xl border-border/50 shadow-xl">
-              <div className="p-4 border-b border-border/50 bg-gradient-to-l from-muted/50 to-transparent">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">الإشعارات</h4>
-                  {unreadCount > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {unreadCount} جديد
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <ScrollArea className="h-80">
-                {notifications && notifications.length > 0 ? (
-                  <div className="divide-y divide-border/50">
-                    {notifications.slice(0, 5).map((notification, index) => (
-                      <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={cn(
-                          "p-4 hover:bg-muted/30 cursor-pointer transition-colors",
-                          !notification.isRead && "bg-primary/5"
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "p-2 rounded-lg",
-                            !notification.isRead ? "bg-primary/10" : "bg-muted/50"
-                          )}>
-                            <Bell className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{notification.title}</p>
-                            <p className="text-muted-foreground text-xs mt-1">
-                              {notification.message}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-8 text-center"
-                  >
-                    <motion.div
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                    </motion.div>
-                    <p className="text-muted-foreground">لا توجد إشعارات</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">ستظهر الإشعارات هنا</p>
-                  </motion.div>
-                )}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
+          {/* Notifications - مركز الإشعارات المتقدم */}
+          <NotificationCenter
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDelete={deleteNotification}
+            onDeleteAll={deleteAll}
+            onRefresh={refreshNotifications}
+            onLinkClick={handleNotificationLinkClick}
+            isLoading={notificationsLoading}
+          />
 
           {/* User Menu */}
           <DropdownMenu>

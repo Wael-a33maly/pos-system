@@ -1,10 +1,11 @@
 // ============================================
 // Dashboard Page - صفحة لوحة التحكم
+// تم تحسينها مع Code Splitting للرسوم البيانية
 // ============================================
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -22,29 +23,13 @@ import {
   Target,
   Zap,
   ChevronLeft,
-  MoreHorizontal,
   FileText,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -52,15 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 
 import { useDashboard } from '../hooks';
 import { KPICard } from './KPICard';
@@ -69,10 +47,45 @@ import { QuickActionButton } from './QuickActionButton';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import type { CurrencySettings } from '../types';
 
-// Colors for charts
-const CHART_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+// ============================================
+// Lazy Loading للرسوم البيانية - تحسين الأداء
+// ============================================
+const DailySalesChart = lazy(() => 
+  import('./charts/DailySalesChart').then(m => ({ default: m.DailySalesChart }))
+);
 
-// Format currency with dynamic currency
+const HourlySalesChart = lazy(() => 
+  import('./charts/HourlySalesChart').then(m => ({ default: m.HourlySalesChart }))
+);
+
+const PaymentDistributionChart = lazy(() => 
+  import('./charts/PaymentDistributionChart').then(m => ({ default: m.PaymentDistributionChart }))
+);
+
+const BranchPerformanceChart = lazy(() => 
+  import('./charts/BranchPerformanceChart').then(m => ({ default: m.BranchPerformanceChart }))
+);
+
+// ============================================
+// مكون تحميل مؤقت للرسوم البيانية
+// ============================================
+function ChartSkeleton() {
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-4 w-24" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[250px] w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
+// تنسيق العملة
+// ============================================
 const formatCurrency = (value: number, currency: CurrencySettings = { code: 'SAR', symbol: 'ر.س', decimalPlaces: 2 }) => {
   try {
     return new Intl.NumberFormat('ar-SA', {
@@ -86,12 +99,14 @@ const formatCurrency = (value: number, currency: CurrencySettings = { code: 'SAR
   }
 };
 
-// Format number
+// تنسيق الأرقام
 const formatNumber = (value: number) => {
   return new Intl.NumberFormat('ar-SA').format(value);
 };
 
-// Animation variants
+// ============================================
+// متغيرات الحركة
+// ============================================
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -102,6 +117,9 @@ const containerVariants = {
   },
 };
 
+// ============================================
+// المكون الرئيسي
+// ============================================
 export function DashboardPage() {
   const {
     data,
@@ -115,7 +133,7 @@ export function DashboardPage() {
     refresh,
   } = useDashboard();
 
-  // Prepare chart data
+  // تحضير البيانات للرسوم البيانية
   const hourlyChartData = useMemo(() => {
     if (!data) return [];
     return data.hourlySales.map(item => ({
@@ -137,14 +155,16 @@ export function DashboardPage() {
     if (!data) return [];
     return data.dailySales.map(item => ({
       ...item,
-      dateLabel: format(parseISO(item.date), 'EEE', { locale: ar }),
+      dateLabel: format(new Date(item.date), 'EEE', { locale: ar }),
     }));
   }, [data]);
 
+  // حالة التحميل
   if (loading) {
     return <DashboardSkeleton />;
   }
 
+  // حالة الخطأ
   if (error || !data) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
@@ -174,7 +194,7 @@ export function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6 pb-10">
-      {/* Header with animation */}
+      {/* Header */}
       <motion.div 
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         initial={{ opacity: 0, y: -20 }}
@@ -217,7 +237,7 @@ export function DashboardPage() {
               disabled={refreshing}
               className="relative overflow-hidden"
             >
-              <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
             </Button>
           </motion.div>
         </div>
@@ -312,228 +332,21 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Row - Lazy Loaded */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Sales Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="h-full overflow-hidden">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    المبيعات الأسبوعية
-                  </CardTitle>
-                  <CardDescription>آخر 7 أيام</CardDescription>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem>تصدير كصورة</DropdownMenuItem>
-                    <DropdownMenuItem>عرض التفاصيل</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full min-w-0">
-                {dailyChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                    <AreaChart data={dailyChartData}>
-                    <defs>
-                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="dateLabel" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, currency)}
-                      labelStyle={{ direction: 'rtl' }}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '12px',
-                      }}
-                    />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="sales" 
-                      name="المبيعات" 
-                      stroke="#10b981" 
-                      strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorSales)" 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="profit" 
-                      name="الربح" 
-                      stroke="#3b82f6" 
-                      strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorProfit)" 
-                    />
-                  </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">لا توجد بيانات</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Hourly Sales Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="h-full overflow-hidden">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    المبيعات بالساعة
-                  </CardTitle>
-                  <CardDescription>توزيع المبيعات اليوم</CardDescription>
-                </div>
-                <Badge variant="secondary" className="gap-1">
-                  <Zap className="h-3 w-3" />
-                  مباشر
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full min-w-0">
-                {hourlyChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                    <BarChart data={hourlyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="hourLabel" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, currency)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '12px',
-                      }}
-                    />
-                    <Bar 
-                      dataKey="sales" 
-                      name="المبيعات" 
-                      fill="#10b981" 
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={40}
-                    />
-                  </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">لا توجد بيانات</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Suspense fallback={<ChartSkeleton />}>
+          <DailySalesChart data={data.dailySales} currency={currency} />
+        </Suspense>
+        <Suspense fallback={<ChartSkeleton />}>
+          <HourlySalesChart data={data.hourlySales} currency={currency} />
+        </Suspense>
       </div>
 
-      {/* Second Charts Row */}
+      {/* Second Charts Row - Lazy Loaded */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Payment Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                طرق الدفع
-              </CardTitle>
-              <CardDescription>توزيع طرق الدفع اليوم</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px] w-full min-w-0">
-                {paymentChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                    <PieChart>
-                    <Pie
-                      data={paymentChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {paymentChartData.map((_, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={CHART_COLORS[index % CHART_COLORS.length]}
-                          stroke="transparent"
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, currency)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '12px',
-                      }}
-                    />
-                  </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">لا توجد بيانات</div>
-                )}
-              </div>
-              <Separator className="my-4" />
-              <div className="space-y-2">
-                {data.paymentDistribution.map((item, index) => (
-                  <motion.div 
-                    key={item.method} 
-                    className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full ring-2 ring-offset-2 ring-offset-background" 
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      />
-                      <span>{item.methodAr}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{formatCurrency(item.amount, currency)}</span>
-                      <Badge variant="outline" className="text-xs">{item.percentage.toFixed(0)}%</Badge>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Suspense fallback={<ChartSkeleton />}>
+          <PaymentDistributionChart data={data.paymentDistribution} currency={currency} />
+        </Suspense>
 
         {/* Top Products */}
         <motion.div
@@ -561,13 +374,12 @@ export function DashboardPage() {
                       transition={{ delay: 0.6 + index * 0.1 }}
                       whileHover={{ scale: 1.02 }}
                     >
-                      <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold",
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
                         index === 0 ? "bg-gradient-to-br from-amber-400 to-amber-600 text-white" :
                         index === 1 ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white" :
                         index === 2 ? "bg-gradient-to-br from-amber-600 to-amber-800 text-white" :
                         "bg-muted text-muted-foreground"
-                      )}>
+                      }`}>
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -592,78 +404,12 @@ export function DashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Branch Performance */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5 text-primary" />
-                أداء الفروع
-              </CardTitle>
-              <CardDescription>مقارنة المبيعات هذا الأسبوع</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[180px] w-full min-w-0">
-                {data.branchPerformance && data.branchPerformance.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                    <BarChart data={data.branchPerformance} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" className="text-xs" />
-                    <YAxis dataKey="name" type="category" width={70} className="text-xs" />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, currency)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '12px',
-                      }}
-                    />
-                    <Bar 
-                      dataKey="sales" 
-                      name="المبيعات" 
-                      fill="#10b981" 
-                      radius={[0, 6, 6, 0]}
-                      maxBarSize={30}
-                    />
-                  </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground">لا توجد بيانات</div>
-                )}
-              </div>
-              <Separator className="my-4" />
-              <ScrollArea className="h-[130px]">
-                <div className="space-y-3">
-                  {data.branchPerformance.map((branch, index) => (
-                    <motion.div 
-                      key={branch.id} 
-                      className="flex items-center justify-between text-sm"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span>{branch.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{formatCurrency(branch.sales, currency)}</span>
-                        <Badge variant="outline" className="text-xs">{branch.invoices} فاتورة</Badge>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Suspense fallback={<ChartSkeleton />}>
+          <BranchPerformanceChart data={data.branchPerformance || []} currency={currency} />
+        </Suspense>
       </div>
 
-      {/* Bottom Section - Recent Invoices */}
+      {/* Recent Invoices */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

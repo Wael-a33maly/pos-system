@@ -1,12 +1,21 @@
+// ============================================
+// Main Page - الصفحة الرئيسية
+// تم تحسينها مع Preload و React.memo
+// ============================================
+
 'use client';
 
-import { useEffect, Suspense, lazy, useState } from 'react';
+import { useEffect, Suspense, lazy, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/layout/Layout';
 import { useAppStore } from '@/store';
 import { Skeleton } from '@/components/ui/skeleton';
+import { memo } from 'react';
 
-function PageSkeleton() {
+// ============================================
+// مكون التحميل المؤقت - محسن
+// ============================================
+const PageSkeleton = memo(function PageSkeleton() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -22,21 +31,35 @@ function PageSkeleton() {
       <Skeleton className="h-96" />
     </div>
   );
-}
+});
 
-// Core Pages - Always needed
-const DashboardPage = lazy(() => import('@/modules/dashboard/components/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const POSPage = lazy(() => import('@/modules/pos/components/POSPage').then(m => ({ default: m.POSPage })));
-const LoginPage = lazy(() => import('@/modules/auth/components/LoginPage').then(m => ({ default: m.LoginPage })));
+// ============================================
+// الصفحات الأساسية - دائماً مطلوبة
+// مع Preload للصفحات الشائعة
+// ============================================
+const DashboardPage = lazy(() => 
+  import('@/modules/dashboard/components/DashboardPage').then(m => ({ default: m.DashboardPage }))
+);
+const POSPage = lazy(() => 
+  import('@/modules/pos/components/POSPage').then(m => ({ default: m.POSPage }))
+);
+const LoginPage = lazy(() => 
+  import('@/modules/auth/components/LoginPage').then(m => ({ default: m.LoginPage }))
+);
 
-function ProfilePage() {
+// ============================================
+// مكون الملف الشخصي - محسن مع memo
+// ============================================
+const ProfilePage = memo(function ProfilePage() {
   const { user } = useAppStore();
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">الملف الشخصي</h1>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center text-2xl font-bold">{user?.name?.charAt(0) || 'U'}</div>
+          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center text-2xl font-bold">
+            {user?.name?.charAt(0) || 'U'}
+          </div>
           <div>
             <h2 className="text-xl font-semibold">{user?.name || 'المستخدم'}</h2>
             <p className="text-muted-foreground">{user?.email}</p>
@@ -45,10 +68,43 @@ function ProfilePage() {
       </div>
     </div>
   );
-}
+});
 
-// Dynamic page loader component
-function DynamicPage({ page }: { page: string }) {
+// ============================================
+// Preload Functions - تحميل مسبق للصفحات الشائعة
+// ============================================
+const pageLoaders: Record<string, () => Promise<unknown>> = {
+  users: () => import('@/modules/users/components/UsersPage'),
+  products: () => import('@/modules/products/components/ProductsPage'),
+  categories: () => import('@/modules/products/components/CategoriesPage'),
+  customers: () => import('@/modules/customers/components/CustomersPage'),
+  invoices: () => import('@/modules/invoices/components/InvoicesPage'),
+  reports: () => import('@/modules/reports/components/ReportsPage'),
+  settings: () => import('@/modules/settings/components/UnifiedSettingsPage'),
+  pos: () => import('@/modules/pos/components/POSPage'),
+};
+
+// Preload الصفحات الشائعة في الخلفية
+const preloadCommonPages = () => {
+  // تأخير التحميل المسبق لعدم التأثير على الأداء الأولي
+  setTimeout(() => {
+    // تحميل Dashboard و POS أولاً (الأكثر استخداماً)
+    import('@/modules/dashboard/components/DashboardPage');
+    import('@/modules/pos/components/POSPage');
+    
+    // تحميل الصفحات الأخرى بعد تأخير أكبر
+    setTimeout(() => {
+      import('@/modules/products/components/ProductsPage');
+      import('@/modules/invoices/components/InvoicesPage');
+      import('@/modules/customers/components/CustomersPage');
+    }, 2000);
+  }, 1000);
+};
+
+// ============================================
+// مكون تحميل الصفحات الديناميكي - محسن
+// ============================================
+const DynamicPage = memo(function DynamicPage({ page }: { page: string }) {
   const [PageComponent, setPageComponent] = useState<React.ComponentType | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -145,6 +201,9 @@ function DynamicPage({ page }: { page: string }) {
           case 'purchases':
             loadedModule = await import('@/modules/purchases/components/PurchasesPage');
             break;
+          case 'payment-gateways':
+            loadedModule = await import('@/components/payments/PaymentGatewaySettings');
+            break;
           default:
             loadedModule = await import('@/modules/dashboard/components/DashboardPage');
         }
@@ -165,17 +224,38 @@ function DynamicPage({ page }: { page: string }) {
   }
 
   return <PageComponent />;
-}
+});
 
+// ============================================
+// مكون محتوى الصفحة - محسن
+// ============================================
 function PageContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
   const { setPosMode, isAuthenticated } = useAppStore();
 
-  useEffect(() => { setPosMode(mode === 'pos'); }, [mode, setPosMode]);
+  // تحميل الصفحات الشائعة مسبقاً
+  useEffect(() => {
+    preloadCommonPages();
+  }, []);
 
-  // Auth check
+  useEffect(() => { 
+    setPosMode(mode === 'pos'); 
+  }, [mode, setPosMode]);
+
+  // تحديد الصفحة التالية للتحميل المسبق
+  useEffect(() => {
+    // تحميل الصفحة التالية المحتملة بناءً على الصفحة الحالية
+    const nextPageLoader = pageLoaders[page || ''];
+    if (nextPageLoader) {
+      // تأخير التحميل المسبق
+      const timer = setTimeout(() => nextPageLoader(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [page]);
+
+  // فحص المصادقة
   if (!isAuthenticated && page !== 'login') {
     return (
       <Layout>
@@ -196,7 +276,7 @@ function PageContent() {
     );
   }
 
-  // POS mode
+  // وضع نقطة البيع
   if (mode === 'pos') {
     return (
       <Layout>
@@ -207,12 +287,12 @@ function PageContent() {
     );
   }
 
-  // Profile page
+  // صفحة الملف الشخصي
   if (page === 'profile' && isAuthenticated) {
     return <Layout><ProfilePage /></Layout>;
   }
 
-  // Dashboard (default)
+  // لوحة التحكم (الافتراضي)
   if (!page) {
     return (
       <Layout>
@@ -223,7 +303,7 @@ function PageContent() {
     );
   }
 
-  // Dynamic pages
+  // الصفحات الديناميكية
   return (
     <Layout>
       <Suspense fallback={<PageSkeleton />}>
@@ -233,6 +313,9 @@ function PageContent() {
   );
 }
 
+// ============================================
+// المكون الرئيسي
+// ============================================
 export default function Home() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>}>

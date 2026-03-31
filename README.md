@@ -1,141 +1,317 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# 🛒 نظام نقاط البيع POS System
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+<div align="center">
 
-## ✨ Technology Stack
+![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-This scaffold provides a robust foundation built with:
+**نظام متكامل لإدارة نقاط البيع والمخزون والفواتير**
 
-### 🎯 Core Framework
-- **⚡ Next.js 16** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+[🚀 البدء السريع](#-البدء-السريع) • [📱 لقطات الشاشة](#-لقطات-الشاشة) • [📖 التوثيق](#-التوثيق) • [🤝 المساهمة](#-المساهمة)
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
-
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
-
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Fetch** - Promise-based HTTP request
-
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
-
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
-
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
-
-## 🎯 Why This Scaffold?
-
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-bun install
-
-# Start development server
-bun run dev
-
-# Build for production
-bun run build
-
-# Start production server
-bun start
-```
-
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
-
-## 🤖 Powered by Z.ai
-
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
-
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
-
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
-
-## 📁 Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
-```
-
-## 🎨 Available Features & Components
-
-This scaffold includes a comprehensive set of modern web development tools:
-
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
-
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
-
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
-
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Fetch + TanStack Query
-- **State Management**: Simple and scalable with Zustand
-
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
-
-## 🤝 Get Started with Z.ai
-
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+</div>
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+## 📖 نظرة عامة
+
+نظام POS متكامل وقابل للتوسع، مصمم لإدارة عمليات البيع والمخزون والفواتير بكفاءة عالية. يدعم العملاء المتعددين، الفروع، الورديات، والتقارير المتقدمة.
+
+### 🎯 لقطات الشاشة
+
+<!-- أضف لقطات الشاشة هنا -->
+| لوحة التحكم | نقطة البيع | المنتجات |
+|:-----------:|:----------:|:--------:|
+| ![Dashboard](./docs/screenshots/dashboard.png) | ![POS](./docs/screenshots/pos.png) | ![Products](./docs/screenshots/products.png) |
+
+| الفواتير | التقارير | الإعدادات |
+|:--------:|:--------:|:---------:|
+| ![Invoices](./docs/screenshots/invoices.png) | ![Reports](./docs/screenshots/reports.png) | ![Settings](./docs/screenshots/settings.png) |
+
+---
+
+## ✨ الميزات الرئيسية
+
+### 🛍️ نقطة البيع (POS)
+- ✅ واجهة سريعة وسهلة الاستخدام
+- ✅ دعم الباركود والماسح الضوئي
+- ✅ سلة مشتريات ذكية مع حساب تلقائي
+- ✅ دعم طرق دفع متعددة (نقدي، بطاقة، تحويل)
+- ✅ طباعة الإيصالات الحرارية
+- ✅ العمل دون اتصال (Offline Mode)
+- ✅ اختصارات لوحة المفاتيح
+
+### 📦 إدارة المنتجات
+- ✅ إدارة المنتجات والتصنيفات والعلامات التجارية
+- ✅ دعم المتغيرات (الأحجام، الألوان)
+- ✅ تتبع المخزون بكل فرع
+- ✅ تنبيهات المخزون المنخفض
+- ✅ طباعة الباركود
+- ✅ استيراد/تصدير المنتجات (Excel)
+
+### 📄 الفواتير والمرتجعات
+- ✅ إنشاء وإدارة الفواتير
+- ✅ نظام مرتجعات متكامل
+- ✅ طباعة وإعادة طباعة الفواتير
+- ✅ ربط الفواتير بالعملاء
+
+### 👥 إدارة العملاء
+- ✅ قاعدة بيانات العملاء
+- ✅ سجل المشتريات لكل عميل
+- ✅ نظام الولاء والنقاط
+
+### 📊 التقارير
+- ✅ تقارير المبيعات (يومي، أسبوعي، شهري)
+- ✅ تقارير المنتجات الأكثر مبيعاً
+- ✅ تقارير الأرباح والخسائر
+- ✅ تقارير حركة المخزون
+- ✅ تصدير التقارير (PDF, Excel)
+
+### 🏪 إدارة الفروع
+- ✅ دعم فروع متعددة
+- ✅ نظام الورديات (فتح/إغلاق)
+- ✅ تقارير Z لكل وردية
+- ✅ نقل المخزون بين الفروع
+
+### 💰 المحاسبة
+- ✅ شجرة الحسابات
+- ✅ القيود المحاسبية
+- ✅ ميزان المراجعة
+- ✅ قائمة الدخل والمركز المالي
+
+### 🔐 الأمان والصلاحيات
+- ✅ نظام أدوار متعدد (مدير، مشرف، مستخدم)
+- ✅ صلاحيات دقيقة لكل وحدة
+- ✅ سجل التدقيق (Audit Log)
+- ✅ مصادقة آمنة
+
+### 📱 PWA والعمل دون اتصال
+- ✅ تثبيت كتطبيق على الجهاز
+- ✅ العمل دون اتصال بالإنترنت
+- ✅ مزامنة تلقائية عند عودة الاتصال
+
+---
+
+## 🛠️ التقنيات المستخدمة
+
+### 🎯 Core Framework
+| التقنية | الوصف |
+|---------|-------|
+| ⚡ **Next.js 16** | إطار عمل React للإنتاج مع App Router |
+| 📘 **TypeScript 5** | JavaScript آمن الأنواع |
+| 🎨 **Tailwind CSS 4** | إطار CSS للتصميم السريع |
+
+### 🧩 UI Components
+| التقنية | الوصف |
+|---------|-------|
+| 🧩 **shadcn/ui** | مكونات UI عالية الجودة |
+| 🎯 **Lucide React** | مكتبة أيقونات متسقة |
+| 🌈 **Framer Motion** | رسوم متحركة سلسة |
+| 🎨 **Next Themes** | الوضع الداكن/الفاتح |
+
+### 📋 Forms & Validation
+| التقنية | الوصف |
+|---------|-------|
+| 🎣 **React Hook Form** | نماذج عالية الأداء |
+| ✅ **Zod** | التحقق من البيانات |
+
+### 🔄 State & Data
+| التقنية | الوصف |
+|---------|-------|
+| 🐻 **Zustand** | إدارة الحالة |
+| 🔄 **TanStack Query** | جلب وتخزين البيانات |
+
+### 🗄️ Database & Backend
+| التقنية | الوصف |
+|---------|-------|
+| 🗄️ **Prisma** | ORM للتعامل مع قاعدة البيانات |
+| 📦 **SQLite** | قاعدة بيانات خفيفة |
+| 🔐 **NextAuth.js** | نظام المصادقة |
+
+### 📊 Charts & Visualization
+| التقنية | الوصف |
+|---------|-------|
+| 📊 **Recharts** | رسوم بيانية تفاعلية |
+| 📊 **TanStack Table** | جداول بيانات متقدمة |
+
+---
+
+## 💻 متطلبات النظام
+
+| المتطلب | الحد الأدنى | الموصى به |
+|---------|-------------|-----------|
+| Node.js | 18.x | 20.x+ |
+| الذاكرة (RAM) | 2GB | 4GB+ |
+| مساحة القرص | 500MB | 1GB+ |
+| المتصفح | Chrome 90+, Firefox 88+, Safari 14+ | أحدث إصدار |
+
+---
+
+## 🚀 البدء السريع
+
+### 1️⃣ استنساخ المشروع
+
+```bash
+git clone https://github.com/your-org/pos-system.git
+cd pos-system
+```
+
+### 2️⃣ تثبيت التبعيات
+
+```bash
+# باستخدام bun (موصى به)
+bun install
+
+# أو باستخدام npm
+npm install
+```
+
+### 3️⃣ إعداد قاعدة البيانات
+
+```bash
+# إنشاء قاعدة البيانات
+bun run db:push
+
+# تشغيل البيانات الأولية (اختياري)
+bun run db:seed
+```
+
+### 4️⃣ إعداد متغيرات البيئة
+
+أنشئ ملف `.env` في جذر المشروع:
+
+```env
+DATABASE_URL="file:./db/custom.db"
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+### 5️⃣ تشغيل التطبيق
+
+```bash
+# وضع التطوير
+bun run dev
+
+# بناء الإنتاج
+bun run build
+
+# تشغيل الإنتاج
+bun start
+```
+
+افتح [http://localhost:3000](http://localhost:3000) في المتصفح.
+
+### 🔑 بيانات الدخول الافتراضية
+
+| الدور | البريد الإلكتروني | كلمة المرور |
+|-------|-------------------|-------------|
+| مدير عام | admin@pos.com | admin123 |
+| مستخدم | user@pos.com | user123 |
+
+---
+
+## 📁 هيكل المشروع
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API Routes
+│   │   ├── auth/          # المصادقة
+│   │   ├── products/      # المنتجات
+│   │   ├── invoices/      # الفواتير
+│   │   ├── customers/     # العملاء
+│   │   └── ...
+│   ├── login/             # صفحة الدخول
+│   └── page.tsx           # الصفحة الرئيسية
+│
+├── components/            # المكونات المشتركة
+│   ├── ui/               # مكونات shadcn/ui
+│   ├── layout/           # تخطيط الصفحة
+│   ├── search/           # البحث الشامل
+│   └── ...
+│
+├── modules/              # الوحدات المعيارية
+│   ├── auth/            # وحدة المصادقة
+│   ├── pos/             # وحدة نقطة البيع
+│   ├── products/        # وحدة المنتجات
+│   ├── customers/       # وحدة العملاء
+│   ├── invoices/        # وحدة الفواتير
+│   ├── reports/         # وحدة التقارير
+│   ├── settings/        # وحدة الإعدادات
+│   └── ...
+│
+├── hooks/               # Custom Hooks
+├── lib/                 # المكتبات المساعدة
+├── store/               # إدارة الحالة
+├── types/               # TypeScript Types
+└── constants/           # الثوابت
+```
+
+---
+
+## 📖 التوثيق
+
+| الوثيقة | الوصف |
+|---------|-------|
+| 📘 [دليل المستخدم](./docs/USER_GUIDE.md) | كيفية استخدام النظام |
+| 🔧 [دليل المطور](./docs/DEVELOPER_GUIDE.md) | البنية والتطوير |
+| 📡 [مرجع API](./docs/API_REFERENCE.md) | توثيق الـ APIs |
+| 🏗️ [البنية الهيكلية](./docs/ARCHITECTURE.md) | تصميم النظام |
+| 📝 [سجل التغييرات](./CHANGELOG.md) | تاريخ التحديثات |
+
+---
+
+## 🧪 الاختبارات
+
+```bash
+# تشغيل الاختبارات
+bun run test
+
+# تشغيل مع المراقبة
+bun run test:watch
+
+# تقرير التغطية
+bun run test:coverage
+```
+
+---
+
+## 🤝 المساهمة
+
+نرحب بمساهماتكم! راجع [دليل المساهمة](./CONTRIBUTING.md) للتفاصيل.
+
+### خطوات المساهمة:
+
+1. Fork المشروع
+2. إنشاء فرع جديد (`git checkout -b feature/amazing-feature`)
+3. عمل Commit للتغييرات (`git commit -m 'Add amazing feature'`)
+4. رفع الفرع (`git push origin feature/amazing-feature`)
+5. فتح Pull Request
+
+---
+
+## 📜 الترخيص
+
+هذا المشروع مرخص تحت رخصة MIT - راجع ملف [LICENSE](LICENSE) للتفاصيل.
+
+---
+
+## 📞 الدعم والتواصل
+
+| القناة | الرابط |
+|--------|--------|
+| 📧 البريد الإلكتروني | support@pos-system.com |
+| 💬 Discord | [انضم للمجتمع](https://discord.gg/pos-system) |
+| 🐛 الإبلاغ عن خطأ | [GitHub Issues](https://github.com/your-org/pos-system/issues) |
+
+---
+
+<div align="center">
+
+**صُنع بـ ❤️ لخدمة المجتمع العربي**
+
+🚀 مدعوم من [Z.ai](https://chat.z.ai)
+
+</div>

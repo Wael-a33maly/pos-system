@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { Providers } from "@/components/Providers";
 
 const geistSans = Geist({
@@ -70,6 +71,7 @@ export default function RootLayout({
             {children}
             <Toaster position="top-center" richColors />
             <OfflineIndicator />
+            <PWAInstallPrompt showAfterDelay={10000} />
           </ThemeProvider>
         </Providers>
       </body>
