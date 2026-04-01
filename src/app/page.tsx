@@ -235,9 +235,17 @@ function PageContent() {
   const page = searchParams.get('page');
   const { setPosMode, isAuthenticated, logout, setUser, setToken } = useAppStore();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  // التأكد من أننا على العميل
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // التحقق من صحة الجلسة عند تحميل التطبيق
   useEffect(() => {
+    if (!mounted) return;
+    
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me');
@@ -259,7 +267,7 @@ function PageContent() {
       }
     };
     checkAuth();
-  }, [logout, setUser, setToken]);
+  }, [mounted, logout, setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -280,6 +288,18 @@ function PageContent() {
       return () => clearTimeout(timer);
     }
   }, [page]);
+
+  // أثناء التحميل على الخادم أو قبل mount
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   // أثناء التحقق من المصادقة
   if (isCheckingAuth) {
