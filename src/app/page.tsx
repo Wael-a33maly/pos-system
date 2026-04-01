@@ -235,10 +235,13 @@ function PageContent() {
   const page = searchParams.get('page');
   const { setPosMode, logout, setUser, setToken } = useAppStore();
   // نستخدم state محلي للتحكم في المصادقة بدلاً من الاعتماد على store
-  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+  // نبدأ بـ null لضمان تطابق SSR و CSR
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | null>(null);
 
   // التحقق من صحة الجلسة عند تحميل التطبيق
+  // نستخدم useEffect للتأكد من أن هذا يعمل فقط على العميل
   useEffect(() => {
+    // دالة التحقق من المصادقة
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me');
@@ -261,6 +264,8 @@ function PageContent() {
         setAuthState('unauthenticated');
       }
     };
+    
+    // تنفيذ التحقق
     checkAuth();
   }, [logout, setUser, setToken]);
 
@@ -284,8 +289,9 @@ function PageContent() {
     }
   }, [page]);
 
-  // أثناء التحقق من المصادقة
-  if (authState === 'loading') {
+  // أثناء التحميل - نفس المحتوى للـ SSR و CSR الأولي
+  // هذا يمنع hydration mismatch
+  if (authState === null || authState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
