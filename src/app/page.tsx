@@ -233,19 +233,12 @@ function PageContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
-  const { setPosMode, isAuthenticated, logout, setUser, setToken } = useAppStore();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [mounted, setMounted] = useState(false);
-
-  // التأكد من أننا على العميل
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { setPosMode, logout, setUser, setToken } = useAppStore();
+  // نستخدم state محلي للتحكم في المصادقة بدلاً من الاعتماد على store
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
   // التحقق من صحة الجلسة عند تحميل التطبيق
   useEffect(() => {
-    if (!mounted) return;
-    
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me');
@@ -254,20 +247,22 @@ function PageContent() {
           if (data.user) {
             setUser(data.user);
             setToken(data.token || 'session-active');
+            setAuthState('authenticated');
           } else {
             logout();
+            setAuthState('unauthenticated');
           }
         } else {
           logout();
+          setAuthState('unauthenticated');
         }
       } catch {
         logout();
-      } finally {
-        setIsCheckingAuth(false);
+        setAuthState('unauthenticated');
       }
     };
     checkAuth();
-  }, [mounted, logout, setUser, setToken]);
+  }, [logout, setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -289,20 +284,8 @@ function PageContent() {
     }
   }, [page]);
 
-  // أثناء التحميل على الخادم أو قبل mount
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
-
   // أثناء التحقق من المصادقة
-  if (isCheckingAuth) {
+  if (authState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -314,7 +297,7 @@ function PageContent() {
   }
 
   // فحص المصادقة - إظهار صفحة تسجيل الدخول إذا لم يكن مصادق عليه
-  if (!isAuthenticated) {
+  if (authState === 'unauthenticated') {
     return (
       <Layout hideSidebar hideHeader>
         <Suspense fallback={<PageSkeleton />}>
@@ -336,7 +319,7 @@ function PageContent() {
   }
 
   // صفحة الملف الشخصي
-  if (page === 'profile' && isAuthenticated) {
+  if (page === 'profile') {
     return <Layout><ProfilePage /></Layout>;
   }
 
