@@ -9,11 +9,12 @@ import { cn } from '@/lib/utils';
 interface LayoutProps {
   children: React.ReactNode;
   hideSidebar?: boolean;
+  hideHeader?: boolean;
 }
 
 const emptySubscribe = () => () => {};
 
-export function Layout({ children, hideSidebar = false }: LayoutProps) {
+export function Layout({ children, hideSidebar = false, hideHeader = false }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { sidebarCollapsed } = useAppStore();
   
@@ -44,8 +45,11 @@ export function Layout({ children, hideSidebar = false }: LayoutProps) {
           !hideSidebar && (sidebarCollapsed ? "mr-[72px]" : "mr-[260px]")
         )}
       >
-        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="h-[calc(100vh-4rem)] overflow-auto">
+        {!hideHeader && <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
+        <main className={cn(
+          "overflow-auto",
+          hideHeader ? "h-screen" : "h-[calc(100vh-4rem)]"
+        )}>
           {children}
         </main>
       </div>

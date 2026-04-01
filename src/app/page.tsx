@@ -233,7 +233,33 @@ function PageContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
-  const { setPosMode, isAuthenticated } = useAppStore();
+  const { setPosMode, isAuthenticated, logout, setUser, setToken } = useAppStore();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // التحقق من صحة الجلسة عند تحميل التطبيق
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            setToken(data.token || 'session-active');
+          } else {
+            logout();
+          }
+        } else {
+          logout();
+        }
+      } catch {
+        logout();
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
+  }, [logout, setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -255,10 +281,22 @@ function PageContent() {
     }
   }, [page]);
 
+  // أثناء التحقق من المصادقة
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
   // فحص المصادقة - إظهار صفحة تسجيل الدخول إذا لم يكن مصادق عليه
   if (!isAuthenticated) {
     return (
-      <Layout hideSidebar>
+      <Layout hideSidebar hideHeader>
         <Suspense fallback={<PageSkeleton />}>
           <LoginPage />
         </Suspense>
