@@ -13,22 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { memo } from 'react';
 
 // ============================================
-// وضع Demo - مستخدم افتراضي للتطبيق
-// ============================================
-const DEMO_USER = {
-  id: 'demo-user',
-  email: 'demo@pos-system.com',
-  name: 'مستخدم تجريبي',
-  nameAr: 'مستخدم تجريبي',
-  role: 'SUPER_ADMIN' as const,
-  permissions: [],
-  isActive: true,
-  branchId: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-// ============================================
 // مكون التحميل المؤقت - محسن
 // ============================================
 const PageSkeleton = memo(function PageSkeleton() {
@@ -249,14 +233,7 @@ function PageContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
-  const { setPosMode, isAuthenticated, setUser } = useAppStore();
-
-  // تفعيل المستخدم الافتراضي للـ Demo
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setUser(DEMO_USER);
-    }
-  }, [isAuthenticated, setUser]);
+  const { setPosMode, isAuthenticated } = useAppStore();
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -278,18 +255,8 @@ function PageContent() {
     }
   }, [page]);
 
-  // فحص المصادقة
-  if (!isAuthenticated && page !== 'login') {
-    return (
-      <Layout hideSidebar>
-        <Suspense fallback={<PageSkeleton />}>
-          <LoginPage />
-        </Suspense>
-      </Layout>
-    );
-  }
-
-  if (page === 'login') {
+  // فحص المصادقة - إظهار صفحة تسجيل الدخول إذا لم يكن مصادق عليه
+  if (!isAuthenticated) {
     return (
       <Layout hideSidebar>
         <Suspense fallback={<PageSkeleton />}>

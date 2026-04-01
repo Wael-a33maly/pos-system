@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, LogIn, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { useAppStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +53,37 @@ export function LoginPage() {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleDemoLogin = async () => {
+    setError(null);
+    setIsDemoLoading(true);
+    
+    try {
+      const response = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'فشل تسجيل الدخول التجريبي');
+      }
+      
+      // Save user and token to store
+      setUser(data.user);
+      setToken(data.token);
+      
+      // Redirect to dashboard
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول التجريبي');
+    } finally {
+      setIsDemoLoading(false);
     }
   };
   
@@ -162,7 +194,41 @@ export function LoginPage() {
               </Button>
             </form>
             
-            <div className="mt-6 pt-4 border-t border-border/50 text-center text-sm text-muted-foreground">
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/50" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">أو</span>
+                </div>
+              </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 mt-4 font-semibold border-dashed border-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+                onClick={handleDemoLogin}
+                disabled={isLoading || isDemoLoading}
+              >
+                {isDemoLoading ? (
+                  <>
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                    جاري الدخول...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="me-2 h-4 w-4 text-primary" />
+                    تجربة النظام بدون تسجيل
+                  </>
+                )}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                استكشف جميع المميزات بحساب تجريبي
+              </p>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border/50 text-center text-sm text-muted-foreground">
               <p>نظام نقاط البيع المتكامل</p>
             </div>
           </CardContent>
