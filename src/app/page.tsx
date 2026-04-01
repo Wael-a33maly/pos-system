@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, Suspense, lazy, useState, useMemo, useCallback } from 'react';
+import { useEffect, Suspense, lazy, useState, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/layout/Layout';
 import { useAppStore } from '@/store';
@@ -234,13 +234,21 @@ function PageContent() {
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
   const { setPosMode, logout, setUser, setToken } = useAppStore();
-  // نستخدم state محلي للتحكم في المصادقة بدلاً من الاعتماد على store
-  // نبدأ بـ null لضمان تطابق SSR و CSR
-  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | null>(null);
+  
+  // استخدام useSyncExternalStore لضمان تطابق SSR و CSR
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  
+  // نستخدم state محلي للتحكم في المصادقة
+  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
   // التحقق من صحة الجلسة عند تحميل التطبيق
-  // نستخدم useEffect للتأكد من أن هذا يعمل فقط على العميل
   useEffect(() => {
+    if (!isMounted) return;
+    
     // دالة التحقق من المصادقة
     const checkAuth = async () => {
       try {
@@ -267,7 +275,7 @@ function PageContent() {
     
     // تنفيذ التحقق
     checkAuth();
-  }, [logout, setUser, setToken]);
+  }, [isMounted, logout, setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -291,7 +299,19 @@ function PageContent() {
 
   // أثناء التحميل - نفس المحتوى للـ SSR و CSR الأولي
   // هذا يمنع hydration mismatch
-  if (authState === null || authState === 'loading') {
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // أثناء التحقق من المصادقة
+  if (authState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
