@@ -1,12 +1,13 @@
 // ============================================
 // Main Page - الصفحة الرئيسية
-// تم تحسينها مع Preload و React.memo
+// تم تحسينها لمنع Hydration Mismatch
 // ============================================
 
 'use client';
 
-import { useEffect, Suspense, lazy, useState, useMemo, useCallback } from 'react';
+import { useEffect, Suspense, lazy, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Layout } from '@/components/layout/Layout';
 import { useAppStore } from '@/store';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,7 +50,6 @@ const LoadingSpinner = memo(function LoadingSpinner() {
 
 // ============================================
 // الصفحات الأساسية - دائماً مطلوبة
-// مع Preload للصفحات الشائعة
 // ============================================
 const DashboardPage = lazy(() => 
   import('@/modules/dashboard/components/DashboardPage').then(m => ({ default: m.DashboardPage }))
@@ -85,7 +85,7 @@ const ProfilePage = memo(function ProfilePage() {
 });
 
 // ============================================
-// Preload Functions - تحميل مسبق للصفحات الشائعة
+// Preload Functions
 // ============================================
 const pageLoaders: Record<string, () => Promise<unknown>> = {
   users: () => import('@/modules/users/components/UsersPage'),
@@ -98,15 +98,10 @@ const pageLoaders: Record<string, () => Promise<unknown>> = {
   pos: () => import('@/modules/pos/components/POSPage'),
 };
 
-// Preload الصفحات الشائعة في الخلفية
 const preloadCommonPages = () => {
-  // تأخير التحميل المسبق لعدم التأثير على الأداء الأولي
   setTimeout(() => {
-    // تحميل Dashboard و POS أولاً (الأكثر استخداماً)
     import('@/modules/dashboard/components/DashboardPage');
     import('@/modules/pos/components/POSPage');
-    
-    // تحميل الصفحات الأخرى بعد تأخير أكبر
     setTimeout(() => {
       import('@/modules/products/components/ProductsPage');
       import('@/modules/invoices/components/InvoicesPage');
@@ -116,7 +111,7 @@ const preloadCommonPages = () => {
 };
 
 // ============================================
-// مكون تحميل الصفحات الديناميكي - محسن
+// مكون تحميل الصفحات الديناميكي
 // ============================================
 const DynamicPage = memo(function DynamicPage({ page }: { page: string }) {
   const [PageComponent, setPageComponent] = useState<React.ComponentType | null>(null);
@@ -129,97 +124,40 @@ const DynamicPage = memo(function DynamicPage({ page }: { page: string }) {
       try {
         let loadedModule;
         switch (page) {
-          case 'users':
-            loadedModule = await import('@/modules/users/components/UsersPage');
-            break;
+          case 'users': loadedModule = await import('@/modules/users/components/UsersPage'); break;
           case 'roles':
-          case 'permissions':
-            loadedModule = await import('@/modules/roles/components/RolesPage');
-            break;
+          case 'permissions': loadedModule = await import('@/modules/roles/components/RolesPage'); break;
           case 'shifts':
           case 'shift-close':
-          case 'shift-closures':
-            loadedModule = await import('@/modules/shifts/components/ShiftManagementPage');
-            break;
-          case 'audit-logs':
-            loadedModule = await import('@/modules/shifts/components/AuditLogsPage');
-            break;
-          case 'products':
-            loadedModule = await import('@/modules/products/components/ProductsPage');
-            break;
-          case 'categories':
-            loadedModule = await import('@/modules/products/components/CategoriesPage');
-            break;
-          case 'brands':
-            loadedModule = await import('@/modules/products/components/BrandsPage');
-            break;
-          case 'customers':
-            loadedModule = await import('@/modules/customers/components/CustomersPage');
-            break;
+          case 'shift-closures': loadedModule = await import('@/modules/shifts/components/ShiftManagementPage'); break;
+          case 'audit-logs': loadedModule = await import('@/modules/shifts/components/AuditLogsPage'); break;
+          case 'products': loadedModule = await import('@/modules/products/components/ProductsPage'); break;
+          case 'categories': loadedModule = await import('@/modules/products/components/CategoriesPage'); break;
+          case 'brands': loadedModule = await import('@/modules/products/components/BrandsPage'); break;
+          case 'customers': loadedModule = await import('@/modules/customers/components/CustomersPage'); break;
           case 'suppliers':
-          case 'supplier-companies':
-            loadedModule = await import('@/modules/suppliers/components/SuppliersPage');
-            break;
-          case 'invoices':
-            loadedModule = await import('@/modules/invoices/components/InvoicesPage');
-            break;
-          case 'returns':
-            loadedModule = await import('@/modules/returns/components/ReturnsPage');
-            break;
+          case 'supplier-companies': loadedModule = await import('@/modules/suppliers/components/SuppliersPage'); break;
+          case 'invoices': loadedModule = await import('@/modules/invoices/components/InvoicesPage'); break;
+          case 'returns': loadedModule = await import('@/modules/returns/components/ReturnsPage'); break;
           case 'expenses':
-          case 'expense-categories':
-            loadedModule = await import('@/modules/expenses/components/ExpensesPage');
-            break;
-          case 'accounts':
-            loadedModule = await import('@/modules/accounts/components/AccountsPage');
-            break;
-          case 'chart-of-accounts':
-            loadedModule = await import('@/modules/accounts/components/ChartOfAccountsPage');
-            break;
-          case 'journal-entries':
-            loadedModule = await import('@/modules/accounts/components/JournalEntriesPage');
-            break;
-          case 'financial-reports':
-            loadedModule = await import('@/modules/accounts/components/FinancialReportsPage');
-            break;
-          case 'reports':
-            loadedModule = await import('@/modules/reports/components/ReportsPage');
-            break;
-          case 'settings':
-            loadedModule = await import('@/modules/settings/components/UnifiedSettingsPage');
-            break;
-          case 'barcode':
-            loadedModule = await import('@/modules/products/components/BarcodePrintPage');
-            break;
-          case 'import':
-            loadedModule = await import('@/modules/products/components/ImportProductsPage');
-            break;
-          case 'printing':
-            loadedModule = await import('@/modules/printing/components/PrinterSelector');
-            break;
-          case 'transfers':
-            loadedModule = await import('@/modules/transfers/components/TransfersPage');
-            break;
-          case 'loyalty':
-            loadedModule = await import('@/modules/loyalty/components/LoyaltyPage');
-            break;
-          case 'scheduled-reports':
-            loadedModule = await import('@/modules/scheduled-reports/components/ScheduledReportsPage');
-            break;
-          case 'offers':
-            loadedModule = await import('@/modules/offers/components/OffersPage');
-            break;
-          case 'inventory':
-            loadedModule = await import('@/modules/inventory/components/InventoryPage');
-            break;
-          case 'purchases':
-            loadedModule = await import('@/modules/purchases/components/PurchasesPage');
-            break;
-          case 'payment-gateways':
-            loadedModule = await import('@/components/payments/PaymentGatewaySettings');
-            break;
-          default:
-            loadedModule = await import('@/modules/dashboard/components/DashboardPage');
+          case 'expense-categories': loadedModule = await import('@/modules/expenses/components/ExpensesPage'); break;
+          case 'accounts': loadedModule = await import('@/modules/accounts/components/AccountsPage'); break;
+          case 'chart-of-accounts': loadedModule = await import('@/modules/accounts/components/ChartOfAccountsPage'); break;
+          case 'journal-entries': loadedModule = await import('@/modules/accounts/components/JournalEntriesPage'); break;
+          case 'financial-reports': loadedModule = await import('@/modules/accounts/components/FinancialReportsPage'); break;
+          case 'reports': loadedModule = await import('@/modules/reports/components/ReportsPage'); break;
+          case 'settings': loadedModule = await import('@/modules/settings/components/UnifiedSettingsPage'); break;
+          case 'barcode': loadedModule = await import('@/modules/products/components/BarcodePrintPage'); break;
+          case 'import': loadedModule = await import('@/modules/products/components/ImportProductsPage'); break;
+          case 'printing': loadedModule = await import('@/modules/printing/components/PrinterSelector'); break;
+          case 'transfers': loadedModule = await import('@/modules/transfers/components/TransfersPage'); break;
+          case 'loyalty': loadedModule = await import('@/modules/loyalty/components/LoyaltyPage'); break;
+          case 'scheduled-reports': loadedModule = await import('@/modules/scheduled-reports/components/ScheduledReportsPage'); break;
+          case 'offers': loadedModule = await import('@/modules/offers/components/OffersPage'); break;
+          case 'inventory': loadedModule = await import('@/modules/inventory/components/InventoryPage'); break;
+          case 'purchases': loadedModule = await import('@/modules/purchases/components/PurchasesPage'); break;
+          case 'payment-gateways': loadedModule = await import('@/components/payments/PaymentGatewaySettings'); break;
+          default: loadedModule = await import('@/modules/dashboard/components/DashboardPage');
         }
         setPageComponent(() => loadedModule.default);
       } catch (error) {
@@ -249,20 +187,21 @@ function PageContent() {
   const page = searchParams.get('page');
   const { setPosMode, logout, setUser, setToken } = useAppStore();
   
-  // استخدام useState مع قيمة ابتدائية للتحكم في العرض
-  // هذا يمنع hydration mismatch
-  const [mounted, setMounted] = useState(false);
+  // استخدام ref لتتبع حالة التهيئة
+  const initialized = useRef(false);
+  
+  // حالة المصادقة
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
-  // التحقق من صحة الجلسة عند تحميل التطبيق
+  // التحقق من المصادقة مرة واحدة فقط
   useEffect(() => {
-    // إعادة تحميل الحالة من localStorage يدوياً بعد mount
+    if (initialized.current) return;
+    initialized.current = true;
+    
+    // إعادة تحميل الحالة من localStorage
     useAppStore.persist.rehydrate();
     
-    // تعيين mounted بعد التحميل
-    setMounted(true);
-    
-    // دالة التحقق من المصادقة
+    // التحقق من المصادقة
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me');
@@ -286,7 +225,6 @@ function PageContent() {
       }
     };
     
-    // تنفيذ التحقق
     checkAuth();
   }, [logout, setUser, setToken]);
 
@@ -301,27 +239,19 @@ function PageContent() {
 
   // تحديد الصفحة التالية للتحميل المسبق
   useEffect(() => {
-    // تحميل الصفحة التالية المحتملة بناءً على الصفحة الحالية
     const nextPageLoader = pageLoaders[page || ''];
     if (nextPageLoader) {
-      // تأخير التحميل المسبق
       const timer = setTimeout(() => nextPageLoader(), 500);
       return () => clearTimeout(timer);
     }
   }, [page]);
-
-  // أثناء التحميل الأولي - قبل mount
-  // نعرض نفس المحتوى للـ SSR و CSR الأولي لمنع hydration mismatch
-  if (!mounted) {
-    return <LoadingSpinner />;
-  }
 
   // أثناء التحقق من المصادقة
   if (authState === 'loading') {
     return <LoadingSpinner />;
   }
 
-  // فحص المصادقة - إظهار صفحة تسجيل الدخول إذا لم يكن مصادق عليه
+  // غير مصادق
   if (authState === 'unauthenticated') {
     return (
       <Layout hideSidebar hideHeader>
@@ -348,7 +278,7 @@ function PageContent() {
     return <Layout><ProfilePage /></Layout>;
   }
 
-  // لوحة التحكم (الافتراضي)
+  // لوحة التحكم
   if (!page) {
     return (
       <Layout>
@@ -370,12 +300,16 @@ function PageContent() {
 }
 
 // ============================================
-// المكون الرئيسي
+// المكون الرئيسي - مع SSR معطل لمنع hydration mismatch
 // ============================================
+const PageContentWithNoSSR = dynamic(
+  () => Promise.resolve(PageContent),
+  { 
+    ssr: false,
+    loading: () => <LoadingSpinner />
+  }
+);
+
 export default function Home() {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <PageContent />
-    </Suspense>
-  );
+  return <PageContentWithNoSSR />;
 }

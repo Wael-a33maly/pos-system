@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { useAppStore } from '@/store';
@@ -12,22 +12,12 @@ interface LayoutProps {
   hideHeader?: boolean;
 }
 
-const emptySubscribe = () => () => {};
-
 export function Layout({ children, hideSidebar = false, hideHeader = false }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { sidebarCollapsed } = useAppStore();
-  
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
 
-  if (!mounted) {
-    return null;
-  }
-
+  // عرض مباشر بدون فحص mounted
+  // هذا يمنع hydration mismatch
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       {/* Sidebar */}
