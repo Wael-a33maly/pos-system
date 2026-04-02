@@ -1,0 +1,48 @@
+'use client';
+
+import { useState } from 'react';
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { useAppStore } from '@/store';
+import { cn } from '@/lib/utils';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  hideSidebar?: boolean;
+  hideHeader?: boolean;
+}
+
+export function Layout({ children, hideSidebar = false, hideHeader = false }: LayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { sidebarCollapsed } = useAppStore();
+
+  // عرض مباشر بدون فحص mounted
+  // هذا يمنع hydration mismatch
+  return (
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Sidebar */}
+      {!hideSidebar && (
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Main Content */}
+      <div
+        className={cn(
+          "transition-all duration-300",
+          !hideSidebar && (sidebarCollapsed ? "mr-[72px]" : "mr-[260px]")
+        )}
+      >
+        {!hideHeader && <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />}
+        <main className={cn(
+          "overflow-auto",
+          hideHeader ? "h-screen" : "h-[calc(100vh-4rem)]"
+        )}>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

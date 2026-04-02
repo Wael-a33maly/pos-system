@@ -1,0 +1,1 @@
+export { ScheduledReportsPage } from './components';

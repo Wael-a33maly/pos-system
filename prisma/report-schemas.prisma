@@ -1,0 +1,231 @@
+// ==================== جداول التقارير والملخصات ====================
+
+// ملخص المبيعات اليومي (للتقارير السريعة)
+model DailySalesSummary {
+  id          String   @id @default(cuid())
+  branchId    String
+  date        DateTime @db.Date
+  totalSales  Float    @default(0)
+  totalReturns Float   @default(0)
+  totalDiscount Float  @default(0)
+  totalTax    Float    @default(0)
+  totalCost   Float    @default(0)
+  netProfit   Float    @default(0)
+  invoiceCount Int     @default(0)
+  itemCount   Int      @default(0)
+  cashSales   Float    @default(0)
+  cardSales   Float    @default(0)
+  otherSales  Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([branchId, date])
+  @@index([branchId, date])
+}
+
+// ملخص المبيعات بالساعة (للرسوم البيانية)
+model HourlySalesSummary {
+  id          String   @id @default(cuid())
+  branchId    String
+  date        DateTime @db.Date
+  hour        Int      // 0-23
+  totalSales  Float    @default(0)
+  invoiceCount Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([branchId, date, hour])
+  @@index([branchId, date])
+}
+
+// ملخص مبيعات المنتجات
+model ProductSalesSummary {
+  id          String   @id @default(cuid())
+  productId   String
+  branchId    String
+  date        DateTime @db.Date
+  quantity    Float    @default(0)
+  totalSales  Float    @default(0)
+  totalCost   Float    @default(0)
+  totalProfit Float    @default(0)
+  returnCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  product     Product  @relation(fields: [productId], references: [id])
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([productId, branchId, date])
+  @@index([productId, date])
+  @@index([branchId, date])
+}
+
+// ملخص مبيعات الفئات
+model CategorySalesSummary {
+  id          String   @id @default(cuid())
+  categoryId  String
+  branchId    String
+  date        DateTime @db.Date
+  totalSales  Float    @default(0)
+  itemCount   Int      @default(0)
+  profitMargin Float   @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  category    Category @relation(fields: [categoryId], references: [id])
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([categoryId, branchId, date])
+  @@index([categoryId, date])
+}
+
+// ملخص أداء الكاشير
+model CashierPerformance {
+  id              String   @id @default(cuid())
+  userId          String
+  branchId        String
+  date            DateTime @db.Date
+  totalSales      Float    @default(0)
+  invoiceCount    Int      @default(0)
+  avgInvoiceValue Float    @default(0)
+  returnCount     Int      @default(0)
+  returnAmount    Float    @default(0)
+  discountGiven   Float    @default(0)
+  cancelCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id])
+  branch          Branch   @relation(fields: [branchId], references: [id])
+  
+  @@unique([userId, branchId, date])
+  @@index([userId, date])
+  @@index([branchId, date])
+}
+
+// ملخص طرق الدفع
+model PaymentMethodSummary {
+  id              String   @id @default(cuid())
+  paymentMethodId String
+  branchId        String
+  date            DateTime @db.Date
+  totalAmount     Float    @default(0)
+  transactionCount Int     @default(0)
+  percentage      Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  branch          Branch        @relation(fields: [branchId], references: [id])
+  
+  @@unique([paymentMethodId, branchId, date])
+  @@index([branchId, date])
+}
+
+// تقارير محفوظة
+model SavedReport {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  reportType  String   // sales, products, cashiers, shifts, expenses
+  filters     String   // JSON
+  columns     String   // JSON
+  chartType   String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+}
+
+// إعدادات Dashboard
+model DashboardSettings {
+  id              String   @id @default(cuid())
+  userId          String
+  layout          String   // JSON for widget positions
+  visibleKpis     String   // JSON array
+  defaultBranch   String?
+  defaultDateRange String  @default("today")
+  autoRefresh     Boolean  @default(false)
+  refreshInterval Int      @default(60) // seconds
+  showTax         Boolean  @default(true)
+  showDiscount    Boolean  @default(true)
+  profitCalcMethod String  @default("margin") // margin, markup
+  includeReturns  Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@unique([userId])
+}
+
+// سجل التقارير المولدة (للتتبع والأداء)
+model ReportGenerationLog {
+  id          String   @id @default(cuid())
+  reportType  String
+  filters     String   // JSON
+  generatedBy String
+  branchId    String?
+  duration    Int      // milliseconds
+  rowsCount   Int
+  cacheHit    Boolean  @default(false)
+  exported    Boolean  @default(false)
+  exportFormat String?
+  createdAt   DateTime @default(now())
+  
+  @@index([reportType, createdAt])
+  @@index([generatedBy])
+}
+
+// إعدادات تصدير التقارير
+model ReportExportSettings {
+  id              String   @id @default(cuid())
+  branchId        String?
+  companyName     String
+  companyLogo     String?
+  headerText      String?
+  footerText      String?
+  showTaxDetails  Boolean  @default(true)
+  showDiscountDetails Boolean @default(true)
+  showCost        Boolean  @default(false) // restricted
+  showProfit      Boolean  @default(false) // restricted
+  pdfPageSize     String   @default("A4")
+  pdfOrientation  String   @default("portrait")
+  excelFormat     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  branch          Branch?  @relation(fields: [branchId], references: [id])
+}
+
+// تحديث العلاقات في النماذج الموجودة
+// أضف إلى Branch:
+// dailySalesSummaries    DailySalesSummary[]
+// hourlySalesSummaries   HourlySalesSummary[]
+// productSalesSummaries  ProductSalesSummary[]
+// categorySalesSummaries CategorySalesSummary[]
+// cashierPerformances    CashierPerformance[]
+// paymentMethodSummaries PaymentMethodSummary[]
+// reportExportSettings   ReportExportSettings[]
+
+// أضف إلى Product:
+// salesSummaries         ProductSalesSummary[]
+
+// أضف إلى Category:
+// salesSummaries         CategorySalesSummary[]
+
+// أضف إلى User:
+// cashierPerformances    CashierPerformance[]
+// savedReports           SavedReport[]
+// dashboardSettings      DashboardSettings?
+// reportGenerationLogs   ReportGenerationLog[]
+
+// أضف إلى PaymentMethod:
+// paymentMethodSummaries PaymentMethodSummary[]
