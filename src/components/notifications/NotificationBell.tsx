@@ -34,7 +34,7 @@ export function NotificationBell({
     markAllAsRead,
     deleteNotification,
     deleteAllNotifications,
-  } = useNotifications({ userId });
+  } = useNotifications({ userId, enableWebSocket: false });
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead.mutateAsync();

@@ -148,7 +148,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
     limit: 20,
     autoRefresh: true,
     refreshInterval: 60000,
-    enableWebSocket: true,
+    enableWebSocket: false, // معطل لأنه لا يوجد WebSocket server
   });
 
   // التعامل مع النقر على رابط الإشعار

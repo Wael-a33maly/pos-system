@@ -67,7 +67,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     limit = 50,
     autoRefresh = false,
     refreshInterval = 30000, // 30 ثانية
-    enableWebSocket = true,
+    enableWebSocket = false,
     wsUrl = '',
   } = options;
 

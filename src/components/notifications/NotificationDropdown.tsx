@@ -47,7 +47,7 @@ export function NotificationDropdown({
     markAllAsRead,
     deleteNotification,
     deleteAllNotifications,
-  } = useNotifications({ userId });
+  } = useNotifications({ userId, enableWebSocket: false });
 
   // تصفية الإشعارات
   const filteredNotifications = React.useMemo(() => {
@@ -282,7 +282,7 @@ export function NotificationDropdownSimple({
     isLoading,
     markAsRead,
     deleteNotification,
-  } = useNotifications({ userId });
+  } = useNotifications({ userId, enableWebSocket: false });
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead.mutateAsync(id);
