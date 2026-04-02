@@ -23,6 +23,16 @@ export function LoginPage() {
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const handleLoginSuccess = (user: any, token: string) => {
+    // حفظ المستخدم في store
+    setUser(user);
+    setToken(token);
+    
+    // إعادة توجيه للوحة التحكم
+    const redirectTo = searchParams.get('redirect') || '/';
+    window.location.href = redirectTo;
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -41,14 +51,7 @@ export function LoginPage() {
         throw new Error(data.error || 'فشل تسجيل الدخول');
       }
       
-      // Save user and token to store
-      setUser(data.user);
-      setToken(data.token);
-      
-      // Redirect to dashboard or intended page
-      const redirectTo = searchParams.get('redirect') || '/';
-      router.push(redirectTo);
-      router.refresh();
+      handleLoginSuccess(data.user, data.token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول');
     } finally {
@@ -72,14 +75,7 @@ export function LoginPage() {
         throw new Error(data.error || 'فشل تسجيل الدخول التجريبي');
       }
       
-      // Save user and token to store
-      setUser(data.user);
-      setToken(data.token);
-      
-      // Redirect to dashboard
-      const redirectTo = searchParams.get('redirect') || '/';
-      router.push(redirectTo);
-      router.refresh();
+      handleLoginSuccess(data.user, data.token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول التجريبي');
     } finally {

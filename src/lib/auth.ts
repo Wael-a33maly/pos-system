@@ -26,13 +26,17 @@ export async function getCurrentUser(): Promise<User | null> {
     
     if (!token) return null;
     
-    // For now, return mock user - in production, verify token from database
+    // البحث عن المستخدم بناءً على الـ session
+    // نبحث عن أي مستخدم نشط - في الإنتاج يجب ربط الـ token بالمستخدم
     const user = await db.user.findFirst({
-      where: { email: 'admin@pos.com' },
+      where: { 
+        isActive: true 
+      },
       include: {
         branch: true,
         permissions: true,
       },
+      orderBy: { createdAt: 'asc' },
     });
     
     return user as User | null;

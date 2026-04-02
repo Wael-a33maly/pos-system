@@ -185,12 +185,12 @@ function PageContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get('mode');
   const page = searchParams.get('page');
-  const { setPosMode, logout, setUser, setToken } = useAppStore();
+  const { setPosMode, setUser, setToken } = useAppStore();
   
   // استخدام ref لتتبع حالة التهيئة
   const initialized = useRef(false);
   
-  // حالة المصادقة
+  // حالة المصادقة - نبدأ دائماً بـ unauthenticated لعرض صفحة تسجيل الدخول
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
   // التحقق من المصادقة مرة واحدة فقط
@@ -198,10 +198,7 @@ function PageContent() {
     if (initialized.current) return;
     initialized.current = true;
     
-    // إعادة تحميل الحالة من localStorage
-    useAppStore.persist.rehydrate();
-    
-    // التحقق من المصادقة
+    // التحقق من المصادقة من خلال API فقط (بدون localStorage)
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/me');
@@ -212,21 +209,18 @@ function PageContent() {
             setToken(data.token || 'session-active');
             setAuthState('authenticated');
           } else {
-            logout();
             setAuthState('unauthenticated');
           }
         } else {
-          logout();
           setAuthState('unauthenticated');
         }
       } catch {
-        logout();
         setAuthState('unauthenticated');
       }
     };
     
     checkAuth();
-  }, [logout, setUser, setToken]);
+  }, [setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -251,7 +245,7 @@ function PageContent() {
     return <LoadingSpinner />;
   }
 
-  // غير مصادق
+  // غير مصادق - عرض صفحة تسجيل الدخول
   if (authState === 'unauthenticated') {
     return (
       <Layout hideSidebar hideHeader>
