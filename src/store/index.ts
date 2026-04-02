@@ -271,6 +271,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'pos-storage',
+      skipHydration: true,
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,

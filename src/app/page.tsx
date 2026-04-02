@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, Suspense, lazy, useState, useMemo, useCallback, useSyncExternalStore } from 'react';
+import { useEffect, Suspense, lazy, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/layout/Layout';
 import { useAppStore } from '@/store';
@@ -29,6 +29,20 @@ const PageSkeleton = memo(function PageSkeleton() {
         {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32" />)}
       </div>
       <Skeleton className="h-96" />
+    </div>
+  );
+});
+
+// ============================================
+// مكون التحميل الرئيسي
+// ============================================
+const LoadingSpinner = memo(function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-muted-foreground">جاري التحميل...</p>
+      </div>
     </div>
   );
 });
@@ -235,19 +249,18 @@ function PageContent() {
   const page = searchParams.get('page');
   const { setPosMode, logout, setUser, setToken } = useAppStore();
   
-  // استخدام useSyncExternalStore لضمان تطابق SSR و CSR
-  const isMounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
-  
-  // نستخدم state محلي للتحكم في المصادقة
+  // استخدام useState مع قيمة ابتدائية للتحكم في العرض
+  // هذا يمنع hydration mismatch
+  const [mounted, setMounted] = useState(false);
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
 
   // التحقق من صحة الجلسة عند تحميل التطبيق
   useEffect(() => {
-    if (!isMounted) return;
+    // إعادة تحميل الحالة من localStorage يدوياً بعد mount
+    useAppStore.persist.rehydrate();
+    
+    // تعيين mounted بعد التحميل
+    setMounted(true);
     
     // دالة التحقق من المصادقة
     const checkAuth = async () => {
@@ -275,7 +288,7 @@ function PageContent() {
     
     // تنفيذ التحقق
     checkAuth();
-  }, [isMounted, logout, setUser, setToken]);
+  }, [logout, setUser, setToken]);
 
   // تحميل الصفحات الشائعة مسبقاً
   useEffect(() => {
@@ -297,29 +310,15 @@ function PageContent() {
     }
   }, [page]);
 
-  // أثناء التحميل - نفس المحتوى للـ SSR و CSR الأولي
-  // هذا يمنع hydration mismatch
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
+  // أثناء التحميل الأولي - قبل mount
+  // نعرض نفس المحتوى للـ SSR و CSR الأولي لمنع hydration mismatch
+  if (!mounted) {
+    return <LoadingSpinner />;
   }
 
   // أثناء التحقق من المصادقة
   if (authState === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // فحص المصادقة - إظهار صفحة تسجيل الدخول إذا لم يكن مصادق عليه
@@ -375,7 +374,7 @@ function PageContent() {
 // ============================================
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">جاري التحميل...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <PageContent />
     </Suspense>
   );
